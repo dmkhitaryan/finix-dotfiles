@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs ? (builtins.getFlake "/home/jagerroni/dotfiles").nixosConfigurations.necomac.pkgs }:
 
 # To nix run: nix run -f ~/dotfiles/nixos/wrappers <program>
 {

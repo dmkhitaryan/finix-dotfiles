@@ -224,6 +224,13 @@ let
       "javascript.options.baselinejit" = false; # turn to "true" if too bad.
       "javascript.options.wasm_optimizingjit" = false;
 
+      # Start reacting when free/available memory gets relatively low.
+      "browser.low_commit_space_threshold_mb" = 4096;
+      "browser.low_commit_space_threshold_percent" = 25;
+
+      # Actually allow low-memory tab unloading.
+      "browser.tabs.unloadOnLowMemory" = true;
+      
       # END: BETTERFOX
   };
 
