@@ -1,0 +1,11 @@
+--- a/arch/arm64/boot/dts/apple/t6000-j314s.dts
++++ b/arch/arm64/boot/dts/apple/t6000-j314s.dts
+@@ -9,6 +9,8 @@
+ 
+ /dts-v1/;
+ 
++#define APPLE_USE_PMP
++
+ #include "t6000.dtsi"
+ #include "t600x-j314-j316.dtsi"
+ 
