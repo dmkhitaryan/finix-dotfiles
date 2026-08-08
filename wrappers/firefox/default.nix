@@ -16,6 +16,22 @@ let
       # version: 150
       # url: https://github.com/yokoffing/Betterfox
 
+      # v152 FASTFOX
+      "gfx.content.skia-font-cache-size" = 20;
+      "content.notify.interval" = 100000;
+      "gfx.canvas.accelerated.cache-size" = 512;
+      "javascript.options.baselinejit.threshold" = 50;
+      "media.cache_readahead_limit" = 3600;
+      "media.cache_resume_threshold" = 1800;
+      "image.mem.decode_bytes_at_a_time" = 32768;
+      "network.buffer.cache.size" = 65535;
+      "network.buffer.cache.count" = 48;
+      "network.http.max-connections" = 1800;
+      "network.http.max-persistent-connections-per-server" = 10;
+      "network.http.max-urgent-start-excessive-connections-per-host" = 5;
+      "network.http.request.max-start-delay" = 5;
+      "network.dnsCacheExpiration" = 3600;
+
       # SECTION: SECUREFOX
 
       # TRACKING PROTECTION
@@ -42,7 +58,6 @@ let
 
       # SHUTDOWN & SANITIZING
       "privacy.history.custom" = true;
-      "browser.privatebrowsing.resetPBM.enabled" = true;
 
       # SPECULATIVE LOADING
       "network.http.speculative-parallel-limit" = 0;
@@ -110,7 +125,6 @@ let
       "toolkit.telemetry.coverage.opt-out" = true;
       "toolkit.coverage.opt-out" = true;
       "toolkit.coverage.endpoint.base" = "";
-      "browser.newtabpage.activity-stream.feeds.telemetry" = false;
       "browser.newtabpage.activity-stream.telemetry" = false;
       "datareporting.usage.uploadEnabled" = false;
 
@@ -175,9 +189,7 @@ let
 
       # TAB BEHAVIOR
       "browser.bookmarks.openInTabClosesMenu" = false;
-      "browser.menu.showViewImageInfo" = true;
       "findbar.highlightAll" = true;
-      "layout.word_select.eat_space_to_next_word" = false;
 
       # SECTION: SMOOTHFOX
 
@@ -220,9 +232,9 @@ let
 
       # PREF: disable JIT compliation
       # WARNING: Some sites may malfunction.
-      "javascript.options.ion" = false;
-      "javascript.options.baselinejit" = false; # turn to "true" if too bad.
-      "javascript.options.wasm_optimizingjit" = false;
+      "javascript.options.ion" = true;
+      "javascript.options.baselinejit" = true; # turn to "true" if too bad.
+      "javascript.options.wasm_optimizingjit" = true;
 
       # Start reacting when free/available memory gets relatively low.
       "browser.low_commit_space_threshold_mb" = 4096;
@@ -230,7 +242,7 @@ let
 
       # Actually allow low-memory tab unloading.
       "browser.tabs.unloadOnLowMemory" = true;
-      
+
       # END: BETTERFOX
   };
 

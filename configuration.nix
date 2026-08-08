@@ -395,5 +395,7 @@ providers.privileges.rules = [
     fastfetch
     nh
     playerctl
+    tree
+    btop
   ];
 }
