@@ -4,12 +4,17 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     finix.url = "github:finix-community/finix";
+    scroll-flake = {
+      url = "github:Diax170/scroll-flake";
+      inputs.nixpkgs.follows = "nixpkgs"; # this assumes nixos unstable
+    };
   };
 
   outputs = inputs @ {
     self,
     nixpkgs,
     finix,
+    scroll-flake,
     ...
   }: let
     pkgs = import nixpkgs {
@@ -32,6 +37,7 @@
         }
         (./configuration.nix)
         nix-daemon
+        sway
         nano
         brightnessctl
         openssh
@@ -61,6 +67,7 @@
       specialArgs = {
         modulesPath = toString nixpkgs + "/nixos/modules";
         wrappers = import ./wrappers { inherit pkgs; };
+        inherit scroll-flake;
       };
     };
   };
