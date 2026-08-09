@@ -10,7 +10,6 @@
     self,
     nixpkgs,
     finix,
-    scroll-flake,
     ...
   }: let
     pkgs = import nixpkgs {
@@ -62,7 +61,6 @@
       specialArgs = {
         modulesPath = toString nixpkgs + "/nixos/modules";
         wrappers = import ./wrappers { inherit pkgs; };
-        inherit scroll-flake;
       };
     };
   };

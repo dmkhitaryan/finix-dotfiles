@@ -331,7 +331,6 @@ providers.privileges.rules = [
     (git.override {
       perlSupport = false;
     })
-    scroll
     nixos-rebuild-ng
     iputils
     iproute2
@@ -365,5 +364,6 @@ providers.privileges.rules = [
     playerctl
     tree
     btop
+    file-roller
   ];
 }
