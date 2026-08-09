@@ -10,15 +10,15 @@ start-pipewire = pkgs.writeShellScriptBin "start-pipewire" ''
     /run/current-system/sw/bin/initctl cond clear usr/audio
 
   pkill -u "$USER" -x pipewire-pulse 2>/dev/null || true
-pkill -u "$USER" -x wireplumber 2>/dev/null || true
-pkill -u "$USER" -x pipewire 2>/dev/null || true
+  pkill -u "$USER" -x wireplumber 2>/dev/null || true
+  pkill -u "$USER" -x pipewire 2>/dev/null || true
 
-while pgrep -u "$USER" -x pipewire >/dev/null ||
-      pgrep -u "$USER" -x wireplumber >/dev/null ||
-      pgrep -u "$USER" -x pipewire-pulse >/dev/null
-do
-  sleep 0.1
-done
+  while pgrep -u "$USER" -x pipewire >/dev/null ||
+    pgrep -u "$USER" -x wireplumber >/dev/null ||
+    pgrep -u "$USER" -x pipewire-pulse >/dev/null
+  do
+    sleep 0.1
+  done
 
   /run/current-system/sw/bin/pipewire &
 
@@ -40,24 +40,24 @@ done
 '';
 
 ashell-battery-capacity = pkgs.writeShellScriptBin "ashell-battery-capacity" ''
-    battery=/sys/class/power_supply/macsmc-battery
+  battery=/sys/class/power_supply/macsmc-battery
 
-    last=""
+  last=""
 
-    while true; do
-      if [ -r "$battery/capacity" ]; then
-        capacity=$(cat "$battery/capacity")
+  while true; do
+    if [ -r "$battery/capacity" ]; then
+      capacity=$(cat "$battery/capacity")
 
-        if [ "$capacity" != "$last" ]; then
-          printf '{"text":"%s%%","alt":"battery"}\n' "$capacity"
-          last="$capacity"
-        fi
-      else
-        printf '{"text":"?","alt":"unavailable"}\n'
+      if [ "$capacity" != "$last" ]; then
+        printf '{"text":"%s%%","alt":"battery"}\n' "$capacity"
+        last="$capacity"
       fi
+    else
+      printf '{"text":"?","alt":"unavailable"}\n'
+    fi
 
-      sleep 5
-    done
+    sleep 5
+  done
 '';
 
 start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
@@ -106,12 +106,12 @@ start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
 in
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
       ./hardware-configuration.nix
       ./apple-silicon-support
     ];
 
-  # Use latest kernel.
+  # In flake setups, vendor directory must be set explicitly.
   hardware.asahi.enable = true;
   hardware.asahi.peripheralFirmwareDirectory = ./vendorfw;
 
@@ -163,13 +163,13 @@ in
   };
 
   boot.loader.efi.canTouchEfiVariables = false;
-  boot.kernelParams = [ 
+  boot.kernelParams = [
     "appledrm.show_notch=1"
     "zswap.enabled=1"
-    "zswap.max_pool_percent=20" 
-   ]; 
-  boot.kernelPatches = [
-    { 
+    "zswap.max_pool_percent=20"
+   ];
+  boot.kernelPatches = [ # ~20% battery boost on M1 Pro!
+    {
       name = "apple-use-pmp";
       patch = ./patches/apple-use-pmp.patch;
     }
@@ -181,14 +181,14 @@ in
     pkgs.xdg-desktop-portal-gtk
     pkgs.xdg-desktop-portal-gnome
     termfilechooser
-    ]; 
+    ];
   };
 
   programs = {
     limine = {
       enable = true;
       settings.editor_enabled = true; # Disable on systems that need security
-      maxGenerations = 10; 
+      maxGenerations = 10;
    };
 
    pipewire = {
@@ -206,21 +206,6 @@ in
     niri.enable = true;
     gnome-keyring.enable = true;
     xwayland-satellite.enable = true;
-  #  regreet = {
-  #    enable = true;
-  #    compositor = {
-  #      extraArgs = [
-  #        "-d"
- #         "-s"
-#	  "-m"
-#	  "-last"
-#	];
-#	environment = {
-#	  XKB_DEFAULT_LAYOUT = "us";
-#	  XKB_DEFAULT_VARIANT = "qwerty";
-#	};
- #     };
- #   };
   };
 
   services.dbus.packages = [
@@ -243,18 +228,6 @@ in
   ];
 
   services = {
-#    greetd.enable = true;
-#    greetd.settings = {
-#      default_session = {
-#        command = ''
-#          ${pkgs.tuigreet}/bin/tuigreet \
-#          --time \
-#          --remember \
-#          --cmd "${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.niri}/bin/niri --session"
-#        '';
-#        user = "greeter";
-#      };
-#    };
     ly.enable = true;
     openssh.enable = true;
     polkit.enable = true;
@@ -269,17 +242,13 @@ in
     bluetooth.enable = true;
  };
 
-  networking.hostName = "necomac"; # Define your hostname.
-
-  # Set your time zone.
+  networking.hostName = "necomac";
   time.timeZone = "Asia/Yerevan";
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.jagerroni = {
     isNormalUser = true;
     description = "nya~";
     extraGroups = [ "wheel" "video" "rtkit" "input" "render" "audio" "pipewire" config.services.seatd.group ];
-    password = "$6$a8et2Z1h9803iBBe$zHp5WQcBd532CxLjoQik09hmAtactwVehG1CfLCG3uWZ8bA5HU9WubOFdT2UpupoYJ.IG32k0SusxvU9CMqkT.";
     packages = with pkgs; [];
   };
 
@@ -349,21 +318,20 @@ providers.privileges.rules = [
   }
 ];
 
-  environment.variables.LV2_PATH = lib.makeSearchPath "lib/lv2" [
+  environment.variables.LV2_PATH = lib.makeSearchPath "lib/lv2" [ # All needed for sound on Asahi Linux.
     pkgs.triforce-lv2
     pkgs.bankstown-lv2
-    pkgs.lsp-plugins    
+    pkgs.lsp-plugins
   ];
 
   security.pam.environment.NH_FLAKE.default = "/home/jagerroni/dotfiles";
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
     wget
     (git.override {
       perlSupport = false;
     })
+    scroll
     nixos-rebuild-ng
     iputils
     iproute2
@@ -372,11 +340,11 @@ providers.privileges.rules = [
     wl-clipboard-rs
     foot
     adwaita-icon-theme
-    catppuccin-cursors.frappeLavender  
+    catppuccin-cursors.frappeLavender
     fuzzel
-    wrappers.firefox   
+    wrappers.firefox
     xdg-utils-perlless
-    legcord        
+    legcord
     ashell
     asahi-audio
     alsa-ucm-conf-asahi

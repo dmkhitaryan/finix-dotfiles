@@ -4,10 +4,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     finix.url = "github:finix-community/finix";
-    scroll-flake = {
-      url = "github:Diax170/scroll-flake";
-      inputs.nixpkgs.follows = "nixpkgs"; # this assumes nixos unstable
-    };
   };
 
   outputs = inputs @ {
@@ -20,7 +16,7 @@
     pkgs = import nixpkgs {
       system = "aarch64-linux";
       config.allowUnfree = true;
-      overlays = [ 
+      overlays = [
         (import ./apple-silicon-support/packages/overlay.nix)
 #        (final: prev: {
 #          xdg-utils = final.callPackage ./xdg-utils-perlless.nix {};
@@ -37,7 +33,6 @@
         }
         (./configuration.nix)
         nix-daemon
-        sway
         nano
         brightnessctl
         openssh
