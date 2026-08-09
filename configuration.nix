@@ -103,6 +103,36 @@ start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
         EOF
       '';
     });
+
+libcava1 = pkgs.libcava.overrideAttrs (old: {
+  version = "1.0.0";
+    
+  src = pkgs.fetchFromGitHub {
+    owner = "LukashonakV";
+    repo = "cava";
+    tag = "1.0.0";
+    hash = "sha256-0r5aAmTs+FcmS501tNYKxG9H+Pq6i32BDRBEjWW6M74=";
+  };
+});
+
+waybar-master =
+  pkgs.waybar.overrideAttrs (old: {
+    version = "0.15.0";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "Alexays";
+      repo = "Waybar";
+      rev = "master";
+      hash = "sha256-POvwObPOp6O14n6KYWNLp2Y3paunA5f8U1NCaodNFcc=";
+    };
+
+    buildInputs = old.buildInputs ++ [ 
+      pkgs.modemmanager
+      libcava1
+    ];
+
+    mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
+  });
 in
 {
   imports =
@@ -180,6 +210,7 @@ in
     portals = [
     pkgs.xdg-desktop-portal-gtk
     pkgs.xdg-desktop-portal-gnome
+    pkgs.xdg-desktop-portal-wlr
     termfilechooser
     ];
   };
@@ -197,15 +228,16 @@ in
      alsa.support32Bit = true;
      packages = [ pkgs.asahi-audio ];
   };
-    brightnessctl.enable = true;
-    wireplumber.enable = true;
-    sudo.enable = true;
-    nano.enable = true;
-    nano.defaultEditor = true;
-    bash.enable = true;
-    niri.enable = true;
-    gnome-keyring.enable = true;
-    xwayland-satellite.enable = true;
+  mango.enable = true;
+  brightnessctl.enable = true;
+  wireplumber.enable = true;
+  sudo.enable = true;
+  nano.enable = true;
+  nano.defaultEditor = true;
+  bash.enable = true;
+  niri.enable = true;
+  gnome-keyring.enable = true;
+  xwayland-satellite.enable = true;
   };
 
   services.dbus.packages = [
@@ -274,6 +306,16 @@ in
     org.freedesktop.impl.portal.FileChooser=termfilechooser;
  '';
 
+ environment.etc."xdg/xdg-desktop-portal/mango-portals.conf".text = ''
+    [preferred]
+    default=wlr;gtk;
+ '';
+
+ environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
+   [screencast]
+   chooser_type=dmenu
+   chooser_cmd=fuzzel --dmenu --prompt="Share: "
+ '';
 
 providers.privileges.rules = [
   {
@@ -365,5 +407,9 @@ providers.privileges.rules = [
     tree
     btop
     file-roller
+    grim
+    slurp
+    swaynotificationcenter
+    waybar-master
   ];
 }
