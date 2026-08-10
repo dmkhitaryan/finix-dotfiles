@@ -75,6 +75,22 @@ start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
   exec ashell -c /home/jagerroni/.config/ashell/config.toml
 '';
 
+start-waybar-sound = pkgs.writeShellScriptBin "start-waybar-sound" ''
+  until
+    pactl info >/dev/null 2>&1 &&
+    pactl get-sink-volume @DEFAULT_SINK@ >/dev/null 2>&1 &&
+    pactl get-source-volume @DEFAULT_SOURCE@ >/dev/null 2>&1
+  do
+    sleep 0.2
+  done
+
+  sleep 0.5
+
+  exec waybar \
+    -c /home/jagerroni/.config/waybar/config.jsonc \
+    -s /home/jagerroni/.config/waybar/style.css
+'';
+
   termfilechooser =
     pkgs.xdg-desktop-portal-termfilechooser.overrideAttrs (old: {
       nativeBuildInputs =
@@ -257,6 +273,7 @@ in
   fonts.packages = [
     pkgs.iosevka
     pkgs.cozette
+    pkgs.nerd-fonts._0xproto
   ];
 
   services = {
@@ -373,8 +390,11 @@ providers.privileges.rules = [
     (git.override {
       perlSupport = false;
     })
+    pulseaudio
     nixos-rebuild-ng
     iputils
+    iwmenu
+    quickshell
     iproute2
     flameshot
     libnotify
@@ -411,5 +431,6 @@ providers.privileges.rules = [
     slurp
     swaynotificationcenter
     waybar-master
+    start-waybar-sound
   ];
 }
