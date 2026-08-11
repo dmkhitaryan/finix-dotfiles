@@ -1,7 +1,35 @@
-{ config, pkgs, lib, wrappers, ... }:
+{ config, pkgs, lib, wrappers, finix, ... }:
 let
 
 xdg-utils-perlless = pkgs.callPackage ./xdg-utils-perlless.nix { };
+
+# https://github.com/emersion/xdg-desktop-portal-wlr/issues/395 still helps it seems.
+xdg-desktop-portal-wlr = pkgs.xdg-desktop-portal-wlr.overrideAttrs (old: {
+  postPatch = (old.postPatch or "") + ''
+    substituteInPlace include/pipewire_screencast.h \
+      --replace-fail '#define XDPW_PWR_BUFFERS 2' \
+                     '#define XDPW_PWR_BUFFERS 4' \
+      --replace-fail '#define XDPW_PWR_BUFFERS_MIN 2' \
+                     '#define XDPW_PWR_BUFFERS_MIN 4'
+'';
+});
+
+# Despite the module override to use libudev-zero, pipewire's build picked
+# systemd udev; this broke hotplugging event on mdevd, even with nlgroups=4.
+pipewireFixed =
+  (pkgs.pipewire.override {
+    enableSystemd = false;
+    udev = pkgs.libudev-zero;
+  }).overrideAttrs (old: {
+    preConfigure = (old.preConfigure or "") + ''
+      export PKG_CONFIG_PATH="${pkgs.libudev-zero}/lib/pkgconfig:$PKG_CONFIG_PATH"
+      export NIX_LDFLAGS="-L${pkgs.libudev-zero}/lib $NIX_LDFLAGS"
+    '';
+
+    patches = (old.patches or [ ]) ++ [
+      "${finix}/modules/programs/pipewire/pipewire.patch"
+    ];
+});
 
 start-pipewire = pkgs.writeShellScriptBin "start-pipewire" ''
   export ALSA_CONFIG_UCM2="${pkgs.alsa-ucm-conf-asahi}/share/alsa/ucm2"
@@ -91,38 +119,40 @@ start-waybar-sound = pkgs.writeShellScriptBin "start-waybar-sound" ''
     -s /home/jagerroni/.config/waybar/style.css
 '';
 
-  termfilechooser =
-    pkgs.xdg-desktop-portal-termfilechooser.overrideAttrs (old: {
-      nativeBuildInputs =
-        (old.nativeBuildInputs or [ ])
-        ++ [ pkgs.makeWrapper ];
+termfilechooser =
+  pkgs.xdg-desktop-portal-termfilechooser.overrideAttrs (old: {
+    nativeBuildInputs =
+      (old.nativeBuildInputs or [ ])
+      ++ [ pkgs.makeWrapper ];
 
-      postInstall = (old.postInstall or "") + ''
-        wrapProgram \
-          "$out/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh" \
-          --prefix PATH : ${lib.makeBinPath [
-            pkgs.yazi
-            pkgs.gnused
-            pkgs.coreutils
-            pkgs.findutils
-          ]}
+    postInstall = (old.postInstall or "") + ''
+      wrapProgram \
+        "$out/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh" \
+        --prefix PATH : ${lib.makeBinPath [
+          pkgs.yazi
+          pkgs.gnused
+          pkgs.coreutils
+          pkgs.findutils
+        ]}
 
-        mkdir -p "$out/etc/xdg/xdg-desktop-portal-termfilechooser"
+      mkdir -p "$out/etc/xdg/xdg-desktop-portal-termfilechooser"
 
-        cat > "$out/etc/xdg/xdg-desktop-portal-termfilechooser/config" <<EOF
-        [filechooser]
-        cmd=$out/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
-        default_dir=\$HOME
-        env=TERMCMD=foot -T yazi-filechooser
-        open_mode=suggested
-        save_mode=last
-        EOF
-      '';
-    });
+      cat > "$out/etc/xdg/xdg-desktop-portal-termfilechooser/config" <<EOF
+      [filechooser]
+      cmd=$out/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
+      default_dir=\$HOME
+      env=TERMCMD=foot -T yazi-filechooser
+      open_mode=suggested
+      save_mode=last
+      EOF
+    '';
+  });
 
+# TODO: drop once https://github.com/NixOS/nixpkgs/pull/549633
+# hits nixos-unstable
 libcava1 = pkgs.libcava.overrideAttrs (old: {
   version = "1.0.0";
-    
+
   src = pkgs.fetchFromGitHub {
     owner = "LukashonakV";
     repo = "cava";
@@ -142,7 +172,7 @@ waybar-master =
       hash = "sha256-POvwObPOp6O14n6KYWNLp2Y3paunA5f8U1NCaodNFcc=";
     };
 
-    buildInputs = old.buildInputs ++ [ 
+    buildInputs = old.buildInputs ++ [
       pkgs.modemmanager
       libcava1
     ];
@@ -200,11 +230,19 @@ in
     enable = true;
     package = pkgs.nixVersions.latest;
     settings = {
+      allow-import-from-derivation = false;
+      connect-timeout = 5;
+      fallback = true;
+      flake-registry = "";
       experimental-features = [ "nix-command" "flakes" ];
+      max-jobs = 2;
+      cores = 4;
       trusted-users = [
         "root"
         "@wheel"
       ];
+      warn-dirty = "false";
+
     };
   };
 
@@ -226,7 +264,7 @@ in
     portals = [
     pkgs.xdg-desktop-portal-gtk
     pkgs.xdg-desktop-portal-gnome
-    pkgs.xdg-desktop-portal-wlr
+    xdg-desktop-portal-wlr
     termfilechooser
     ];
   };
@@ -235,13 +273,14 @@ in
     limine = {
       enable = true;
       settings.editor_enabled = true; # Disable on systems that need security
-      maxGenerations = 10;
+      maxGenerations = 5;
    };
 
    pipewire = {
      enable = true;
      alsa.enable = true;
      alsa.support32Bit = true;
+     package = pipewireFixed;
      packages = [ pkgs.asahi-audio ];
   };
   mango.enable = true;
@@ -274,6 +313,7 @@ in
     pkgs.iosevka
     pkgs.cozette
     pkgs.nerd-fonts._0xproto
+    pkgs.noto-fonts-cjk-sans
   ];
 
   services = {
@@ -283,6 +323,7 @@ in
     sysklogd.enable = true;
     dbus.enable = true;
     mdevd.enable = true;
+    mdevd.nlgroups = 4;
     keventd.enable = false;
     dhcpcd.enable = true;
     iwd.enable = true;
@@ -326,7 +367,7 @@ in
  environment.etc."xdg/xdg-desktop-portal/mango-portals.conf".text = ''
     [preferred]
     default=wlr;gtk;
- '';
+ ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
 
  environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
    [screencast]
@@ -426,7 +467,7 @@ providers.privileges.rules = [
     playerctl
     tree
     btop
-    file-roller
+    libarchive
     grim
     slurp
     swaynotificationcenter

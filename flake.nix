@@ -60,6 +60,7 @@
       ];
 
       specialArgs = {
+        inherit finix;
         modulesPath = toString nixpkgs + "/nixos/modules";
         wrappers = import ./wrappers { inherit pkgs; };
       };
