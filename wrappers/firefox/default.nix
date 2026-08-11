@@ -249,7 +249,7 @@ let
 in
 rec {
   default = firefox;
-  firefox = pkgs.wrapFirefox pkgs.firefox-bin-unwrapped {
+  firefox = wrapFirefox pkgs.firefox-bin-unwrapped {
     extraPolicies = {
       Preferences = builtins.mapAttrs (_: value: {
         Value = value;
