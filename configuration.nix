@@ -1,4 +1,4 @@
-{ config, pkgs, lib, wrappers, finix, ... }:
+{ config, pkgs, lib, wrappers, finix, flakeRegistry, ... }:
 let
 
 xdg-utils-perlless = pkgs.callPackage ./xdg-utils-perlless.nix { };
@@ -178,6 +178,7 @@ waybar-master =
 
     mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
   });
+
 in
 {
   imports =
@@ -233,10 +234,11 @@ in
       auto-optimise-store = true;
       connect-timeout = 5;
       fallback = true;
-      #flake-registry = "";
+      flake-registry = flakeRegistry;
       experimental-features = [ "nix-command" "flakes" ];
       max-jobs = 2;
       cores = 4;
+      nix-path = "";
       trusted-users = [
         "root"
         "@wheel"
@@ -367,6 +369,8 @@ in
  environment.etc."xdg/xdg-desktop-portal/mango-portals.conf".text = ''
     [preferred]
     default=wlr;gtk;
+    org.freedesktop.impl.portal.Screenshot=wlr;
+    org.freedesktop.impl.portal.ScreenCast=wlr;
  ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
 
  environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
@@ -425,6 +429,7 @@ providers.privileges.rules = [
   ];
 
   security.pam.environment.NH_FLAKE.default = "/home/jagerroni/dotfiles";
+  security.pam.environment.NIX_PATH.default = "nixpkgs=flake:nixpkgs";
 
   environment.systemPackages = with pkgs; [
     wget

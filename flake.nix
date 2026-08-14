@@ -17,11 +17,30 @@
       config.allowUnfree = true;
       overlays = [
         (import ./apple-silicon-support/packages/overlay.nix)
-#        (final: prev: {
-#          xdg-utils = final.callPackage ./xdg-utils-perlless.nix {};
-#        })
       ];
     };
+
+    flakeRegistry = pkgs.writeText "flake-registry.json" (
+    builtins.toJSON {
+      version = 2;
+
+      flakes = [
+        {
+          from = {
+            type = "indirect";
+            id = "nixpkgs";
+          };
+
+          to = {
+            type = "github";
+            owner = "NixOS";
+            repo =  "nixpkgs";
+            rev = inputs.nixpkgs.rev;
+          };
+        }
+      ];
+    }
+  );
   in {
     nixosConfigurations.necomac = finix.lib.finixSystem {
       inherit (pkgs) lib;
@@ -60,7 +79,7 @@
       ];
 
       specialArgs = {
-        inherit finix;
+        inherit finix flakeRegistry;
         modulesPath = toString nixpkgs + "/nixos/modules";
         wrappers = import ./wrappers { inherit pkgs; };
       };
