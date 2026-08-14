@@ -105,9 +105,8 @@ start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
 
 start-waybar-sound = pkgs.writeShellScriptBin "start-waybar-sound" ''
   until
-    pactl info >/dev/null 2>&1 &&
-    pactl get-sink-volume @DEFAULT_SINK@ >/dev/null 2>&1 &&
-    pactl get-source-volume @DEFAULT_SOURCE@ >/dev/null 2>&1
+    wpctl get-volume @DEFAULT_AUDIO_SINK@ >/dev/null 2>&1 &&
+    wpctl get-volume @DEFAULT_AUDIO_SOURCE@ >/dev/null 2>&1
   do
     sleep 0.2
   done
@@ -169,7 +168,7 @@ waybar-master =
       owner = "Alexays";
       repo = "Waybar";
       rev = "master";
-      hash = "sha256-POvwObPOp6O14n6KYWNLp2Y3paunA5f8U1NCaodNFcc=";
+      hash = "sha256-uFfKkAbLn4AgX0uZWlYNUxRUOdRp0x4WKXiOvQqhyy4=";
     };
 
     buildInputs = old.buildInputs ++ [
@@ -231,9 +230,10 @@ in
     package = pkgs.nixVersions.latest;
     settings = {
       allow-import-from-derivation = false;
+      auto-optimise-store = true;
       connect-timeout = 5;
       fallback = true;
-      flake-registry = "";
+      #flake-registry = "";
       experimental-features = [ "nix-command" "flakes" ];
       max-jobs = 2;
       cores = 4;
@@ -431,8 +431,6 @@ providers.privileges.rules = [
     (git.override {
       perlSupport = false;
     })
-    pulseaudio
-    nixos-rebuild-ng
     iputils
     iwmenu
     quickshell
