@@ -75,7 +75,6 @@
         wireplumber
         bluetooth
         openssh
-        mango
       ];
 
       specialArgs = {

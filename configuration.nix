@@ -251,7 +251,6 @@ in
      package = pipewireFixed;
      packages = [ pkgs.asahi-audio ];
   };
-  mango.enable = true;
   brightnessctl.enable = true;
   wireplumber.enable = true;
   sudo.enable = true;
@@ -282,6 +281,7 @@ in
     pkgs.cozette
     pkgs.nerd-fonts._0xproto
     pkgs.noto-fonts-cjk-sans
+    pkgs.noto-fonts-color-emoji
   ];
 
   services = {
@@ -442,5 +442,6 @@ providers.privileges.rules = [
     swaynotificationcenter
     wrappers.waybar-master
     start-waybar-sound
+    wrappers.mango
   ];
 }
