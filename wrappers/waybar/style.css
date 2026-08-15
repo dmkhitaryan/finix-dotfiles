@@ -1,0 +1,347 @@
+/* Mango Waybar — circle-gruvbox inspired
+ *
+ * Palette follows Gruvbox and the overall circular/pill language of
+ * DreamMaoMao's circle-gruvbox theme, but this file is intentionally small
+ * and only styles the modules actually used here.
+ */
+
+@define-color bg          #282828;
+@define-color bg1         #3c3836;
+@define-color bg2         #504945;
+@define-color fg          #ebdbb2;
+@define-color fg2         #d5c4a1;
+
+@define-color red         #fb4934;
+@define-color orange      #fe8019;
+@define-color yellow      #fabd2f;
+@define-color green       #b8bb26;
+@define-color aqua        #8ec07c;
+@define-color blue        #83a598;
+@define-color purple      #d3869b;
+@define-color gray        #928374;
+
+* {
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+
+    font-family:
+        "Maple Mono NF CN",
+        "0xProto Nerd Font";
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+window#waybar {
+    background: transparent;
+    color: @fg;
+}
+
+/* Give the whole bar the airy circle-gruvbox spacing. */
+
+.modules-left {
+    margin-left: 5px;
+    margin-top:  5px;
+    margin-bottom: 2px;
+}
+
+.modules-right {
+    margin-left: 200px;
+    margin-right: 5px;
+    margin-top: 5px;
+    margin-bottom: 2px;
+}
+
+/* ---------------------------------------------------------
+ * Mango
+ * --------------------------------------------------------- */
+
+#workspaces {
+    background: transparent;
+}
+
+#workspaces button {
+    min-width: 30px;
+    margin: 0 2px;
+    padding: 0 8px;
+
+    border-radius: 100px;
+
+    background:
+        linear-gradient(
+            180deg,
+            alpha(@bg2, 0.98),
+            alpha(@bg1, 0.98)
+        );
+
+    color: @fg2;
+
+    transition:
+        background-color 120ms ease,
+        color 120ms ease;
+}
+
+#workspaces button:hover {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@blue, 1.08),
+            shade(@blue, 0.92)
+        );
+
+    color: @bg;
+}
+
+#workspaces button.active {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@blue, 1.10),
+            shade(@blue, 0.88)
+        );
+
+    color: @bg;
+}
+
+#workspaces button.urgent {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@red, 1.08),
+            shade(@red, 0.90)
+        );
+
+    color: @bg;
+}
+
+#workspaces button.empty:not(.active) {
+    color: @gray;
+}
+
+/* Mango modules expose #layout and #window. */
+#layout,
+#window {
+    margin: 0 2px;
+    padding: 0 12px;
+    border-radius: 100px;
+}
+
+#layout {
+    min-width: 24px;
+
+    background:
+        linear-gradient(
+            180deg,
+            shade(@purple, 1.06),
+            shade(@purple, 0.88)
+        );
+
+    color: @bg;
+}
+
+#window {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@fg2, 1.05),
+            shade(@fg2, 0.90)
+        );
+
+    color: @bg;
+}
+
+/* ---------------------------------------------------------
+ * Right-side pills
+ * --------------------------------------------------------- */
+
+#tray,
+#network,
+#cpu,
+#memory,
+#temperature,
+#wireplumber,
+#backlight,
+#battery,
+#clock,
+#custom-notification,
+#custom-power {
+    margin: 0 2px;
+    padding: 0 12px;
+    border-radius: 100px;
+    color: @bg;
+}
+
+/* Tray remains dark, like the source circle-gruvbox theme. */
+#tray {
+    padding: 0 10px;
+
+    background:
+        linear-gradient(
+            180deg,
+            alpha(@bg2, 0.98),
+            alpha(@bg1, 0.98)
+        );
+}
+
+/* GTK tray icons do not inherit the text foreground anyway. */
+
+#network {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@green, 1.06),
+            shade(@green, 0.88)
+        );
+}
+
+#network.disconnected {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@red, 1.05),
+            shade(@red, 0.88)
+        );
+}
+
+#cpu {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@fg2, 1.05),
+            shade(@fg2, 0.89)
+        );
+}
+
+#memory {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@blue, 1.05),
+            shade(@blue, 0.87)
+        );
+}
+
+#temperature {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@aqua, 1.06),
+            shade(@aqua, 0.88)
+        );
+}
+
+#temperature.critical {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@red, 1.05),
+            shade(@red, 0.87)
+        );
+}
+
+#wireplumber {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@yellow, 1.06),
+            shade(@yellow, 0.88)
+        );
+}
+
+#wireplumber.muted {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@gray, 1.03),
+            shade(@gray, 0.85)
+        );
+}
+
+#backlight {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@purple, 1.06),
+            shade(@purple, 0.88)
+        );
+}
+
+#battery {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@green, 1.06),
+            shade(@green, 0.88)
+        );
+}
+
+#battery.warning:not(.charging) {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@orange, 1.06),
+            shade(@orange, 0.88)
+        );
+}
+
+#battery.critical:not(.charging) {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@red, 1.06),
+            shade(@red, 0.87)
+        );
+}
+
+#clock {
+    background:
+        linear-gradient(
+            180deg,
+            shade(@fg2, 1.05),
+            shade(@fg2, 0.89)
+        );
+}
+
+#custom-notification {
+    background:
+        linear-gradient(
+            180deg,
+            alpha(@bg2, 0.98),
+            alpha(@bg1, 0.98)
+        );
+
+    color: @fg;
+}
+
+#custom-power {
+    min-width: 20px;
+
+    background:
+        linear-gradient(
+            180deg,
+            shade(@blue, 1.06),
+            shade(@blue, 0.87)
+        );
+}
+
+/* ---------------------------------------------------------
+ * Tooltips
+ * --------------------------------------------------------- */
+
+tooltip {
+    border-radius: 10px;
+    background: alpha(@bg, 0.97);
+    border: 2px solid @bg2;
+}
+
+tooltip label {
+    padding: 6px;
+    color: @fg;
+}
+
+/* Avoid ugly GTK focus rectangles around workspace buttons. */
+button {
+    box-shadow: none;
+    text-shadow: none;
+}

@@ -160,25 +160,6 @@ libcava1 = pkgs.libcava.overrideAttrs (old: {
   };
 });
 
-waybar-master =
-  pkgs.waybar.overrideAttrs (old: {
-    version = "0.15.0";
-
-    src = pkgs.fetchFromGitHub {
-      owner = "Alexays";
-      repo = "Waybar";
-      rev = "master";
-      hash = "sha256-uFfKkAbLn4AgX0uZWlYNUxRUOdRp0x4WKXiOvQqhyy4=";
-    };
-
-    buildInputs = old.buildInputs ++ [
-      pkgs.modemmanager
-      libcava1
-    ];
-
-    mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
-  });
-
 in
 {
   imports =
@@ -446,7 +427,7 @@ providers.privileges.rules = [
     foot
     adwaita-icon-theme
     catppuccin-cursors.frappeLavender
-    fuzzel
+    wrappers.fuzzel
     wrappers.firefox
     xdg-utils-perlless
     legcord
@@ -474,7 +455,7 @@ providers.privileges.rules = [
     grim
     slurp
     swaynotificationcenter
-    waybar-master
+    wrappers.waybar-master
     start-waybar-sound
   ];
 }

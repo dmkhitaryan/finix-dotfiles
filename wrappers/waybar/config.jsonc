@@ -1,0 +1,175 @@
+// Mango + Waybar master
+// Style based on DreamMaoMao/waybar-config circle-gruvbox.
+
+{
+    "layer": "top",
+    "position": "top",
+    "height": 42,
+    "spacing": 4,
+
+    "modules-left": [
+        "mango/workspaces",
+        "mango/layout",
+        "mango/window",
+    ],
+
+    "modules-center": [ ],
+
+    "modules-right": [ 
+        "tray",
+        "network",
+        "cpu",
+        "memory",
+        "temperature",
+        "wireplumber",
+        "backlight",
+        "battery",
+        "clock",
+        "custom/notification",
+    ],
+
+    "mango/workspaces": {
+        "format": "{index}",
+        "on-click": "activate",
+        "on-click-right": "toggle",
+        "hide-empty": true,
+        "overview-label": "󰍉"
+    },
+
+    "mango/layout": {
+        "format": "{symbol}"
+    },
+
+    "mango/window": {
+        "format": "{title}",
+        "icon": true,
+        "icon-size": 18,
+        "max-length": 25
+    },
+
+    "custom/notch": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "tray": {
+        "icon-size": 19,
+        "spacing": 8
+    },
+
+    "network": {
+        "interval": 2,
+        "format-wifi": "{essid} 󰤨",
+        "format-ethernet": "{ifname} 󰈀",
+        "format-linked": "{ifname} 󰈀",
+        "format-disconnected": "Disconnected 󰤭",
+        "format-alt": "{ipaddr}/{cidr}",
+        "tooltip-format-wifi": "{essid}\n{ifname}: {ipaddr}/{cidr}\nGateway: {gwaddr}",
+        "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nGateway: {gwaddr}",
+        "on-click": "iwmenu -l fuzzel"
+    },
+    
+    "cpu": {
+        "interval": 2,
+        "format": "{usage}% ",
+        "tooltip": true
+    },
+
+    "memory": {
+        "interval": 2,
+        "format": "{percentage}% ",
+        "tooltip-format": "{used:0.1f} GiB / {total:0.1f} GiB"
+    },
+
+    "temperature": {
+        "interval": 2,
+        "critical-threshold": 90,
+        "format": "{temperatureC}°C {icon}",
+        "format-icons": ["", "", ""]
+    },
+
+    "wireplumber": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 Muted",
+        "tooltip": true,
+        "tooltip-format": "{node_name}",
+        "scroll-step": 2,
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "format-icons": [
+          "",
+          "",
+          ""
+       ]
+    },
+    "backlight": {
+        "format": "{percent}% {icon}",
+        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "scroll-step": 2,
+        "on-scroll-up": "brightnessctl set +2%",
+        "on-scroll-down": "brightnessctl set 2%-"
+    },
+
+    // Waybar's battery module reads Linux power_supply/sysfs directly.
+    // This intentionally targets the Asahi macsmc power-supply device,
+    // rather than relying on UPower.
+    "battery": {
+        "bat": "macsmc-battery",
+        "interval": 5,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{capacity}% {icon}",
+        "format-full": "{capacity}% {icon}",
+        "format-charging": "{capacity}% 󰂄",
+        "format-plugged": "{capacity}% 󰂄",
+        "format-alt": "{time} {icon}",
+        "format-icons": ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰁹"],
+        "tooltip": true
+    },
+
+    "clock": {
+        "format": "{:%H:%M} ",
+        "format-alt": "{:%A, %d %B} 󰃭",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "weeks-pos": "right",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#ebdbb2'><b>{}</b></span>",
+                "days": "<span color='#d5c4a1'>{}</span>",
+                "weeks": "<span color='#83a598'>W{}</span>",
+                "weekdays": "<span color='#fabd2f'><b>{}</b></span>",
+                "today": "<span color='#fb4934'><b><u>{}</u></b></span>"
+            }
+        }
+    },
+
+    "custom/notification": {
+        "tooltip": false,
+        "format": "{icon}",
+        "format-icons": {
+            "notification": "<span foreground='#fb4934'><sup></sup></span>",
+            "none": "",
+            "dnd-notification": "<span foreground='#fb4934'><sup></sup></span>",
+            "dnd-none": "",
+            "inhibited-notification": "<span foreground='#fb4934'><sup></sup></span>",
+            "inhibited-none": "",
+            "dnd-inhibited-notification": "<span foreground='#fb4934'><sup></sup></span>",
+            "dnd-inhibited-none": ""
+        },
+        "return-type": "json",
+        "exec-if": "which swaync-client",
+        "exec": "swaync-client -swb",
+        "on-click": "sleep 0.1 && swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+        "escape": true
+    },
+
+    "custom/power": {
+        "format": "",
+        "tooltip": false,
+        "on-click": "wlogout -b 6 --protocol layer-shell"
+    }
+}
