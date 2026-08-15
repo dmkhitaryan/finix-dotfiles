@@ -7,4 +7,5 @@
   zsh = (import ./zsh { inherit pkgs; });
   fuzzel = (import ./fuzzel { inherit pkgs; });
   waybar-master = (import ./waybar { inherit pkgs; });
+  mango = (import ./mango { inherit pkgs; });
 }
