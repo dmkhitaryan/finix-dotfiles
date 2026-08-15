@@ -147,19 +147,6 @@ termfilechooser =
     '';
   });
 
-# TODO: drop once https://github.com/NixOS/nixpkgs/pull/549633
-# hits nixos-unstable
-libcava1 = pkgs.libcava.overrideAttrs (old: {
-  version = "1.0.0";
-
-  src = pkgs.fetchFromGitHub {
-    owner = "LukashonakV";
-    repo = "cava";
-    tag = "1.0.0";
-    hash = "sha256-0r5aAmTs+FcmS501tNYKxG9H+Pq6i32BDRBEjWW6M74=";
-  };
-});
-
 in
 {
   imports =
