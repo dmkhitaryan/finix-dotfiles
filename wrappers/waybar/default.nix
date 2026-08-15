@@ -40,8 +40,8 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/waybar" \
-      --add-flags "--config ${builtins.toString ./config.jsonc}" \
-      --add-flags "--style ${builtins.toString ./style.css}"
+      --add-flags "--config ${./config.jsonc}" \
+      --add-flags "--style ${./style.css}"
   '';
   meta.mainProgram = "waybar";
 }

@@ -113,9 +113,7 @@ start-waybar-sound = pkgs.writeShellScriptBin "start-waybar-sound" ''
 
   sleep 0.5
 
-  exec waybar \
-    -c /home/jagerroni/.config/waybar/config.jsonc \
-    -s /home/jagerroni/.config/waybar/style.css
+  exec waybar
 '';
 
 termfilechooser =
