@@ -5,4 +5,5 @@
   firefox = (import ./firefox { inherit pkgs; });
   urxvt = (import ./urxvt { inherit pkgs; });
   zsh = (import ./zsh { inherit pkgs; });
+  fuzzel = (import ./fuzzel { inherit pkgs; });
 }
