@@ -77,17 +77,14 @@ let
     };
   };
 in
-rec {
-  default = urxvt;
-  urxvt = pkgs.symlinkJoin {
-    name = "rxvt-unicode-wrapped-${rxvt-unicode.version}";
-    paths = [ rxvt-unicode ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      for program in urxvt urxvtc urxvtd; do
-        wrapProgram "$out/bin/$program" --set XENVIRONMENT ${xresources}
-      done
-    '';
-    meta.mainProgram = "urxvt";
-  };
+pkgs.symlinkJoin {
+  name = "rxvt-unicode-wrapped-${rxvt-unicode.version}";
+  paths = [ rxvt-unicode ];
+  nativeBuildInputs = [ pkgs.makeWrapper ];
+  postBuild = ''
+    for program in urxvt urxvtc urxvtd; do
+      wrapProgram "$out/bin/$program" --set XENVIRONMENT ${xresources}
+    done
+  '';
+  meta.mainProgram = "urxvt";
 }

@@ -247,14 +247,12 @@ let
   };
 
 in
-rec {
-  default = firefox;
-  firefox = wrapFirefox pkgs.firefox-bin-unwrapped {
-    extraPolicies = {
-      Preferences = builtins.mapAttrs (_: value: {
-        Value = value;
-        Status = preferencesStatus;
-      }) preferences;
-    };
+wrapFirefox pkgs.firefox-bin-unwrapped {
+  extraPolicies = {
+    Preferences = builtins.mapAttrs (_: value: {
+      Value = value;
+      Status = preferencesStatus;
+    }) preferences;
   };
+
 }

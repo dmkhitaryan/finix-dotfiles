@@ -6,28 +6,25 @@ zdotdir = pkgs.writeTextDir ".zshrc" ''
   source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 '';
 in
-rec {
-  default = zsh;
-  zsh = pkgs.symlinkJoin {
-    name = "zsh-wrapped-${pkgs.zsh.version}";
-    paths = [
-      pkgs.zsh
-      pkgs.nix-zsh-completions
-      pkgs.zsh-syntax-highlighting
+pkgs.symlinkJoin {
+  name = "zsh-wrapped-${pkgs.zsh.version}";
+  paths = [
+    pkgs.zsh
+    pkgs.nix-zsh-completions
+    pkgs.zsh-syntax-highlighting
 
-      # For scripts:
-      pkgs.ffmpeg
-      pkgs.jq
-      pkgs.yt-dlp
+    # For scripts:
+    pkgs.ffmpeg
+    pkgs.jq
+    pkgs.yt-dlp
 
-    ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      wrapProgram "$out/bin/zsh" \
-        --set ZDOTDIR ${zdotdir} \
-        --suffix PATH : "${pkgs.ffmpeg}/bin:${pkgs.jq}/bin:${pkgs.yt-dlp}/bin"
-    '';
-    meta.mainProgram = "zsh";
-    shellPath = "/bin/zsh";
-  };
+  ];
+  nativeBuildInputs = [ pkgs.makeWrapper ];
+  postBuild = ''
+    wrapProgram "$out/bin/zsh" \
+      --set ZDOTDIR ${zdotdir} \
+      --suffix PATH : "${pkgs.ffmpeg}/bin:${pkgs.jq}/bin:${pkgs.yt-dlp}/bin"
+  '';
+  meta.mainProgram = "zsh";
+  shellPath = "/bin/zsh";
 }
