@@ -1,0 +1,18 @@
+{
+  "finix": {
+    "type": "github",
+    "owner": "finix-community",
+    "repo": "finix",
+    "rev": "ca9b9db42f46ed81e7d6f224c52c8459437df5c0",
+    "narHash": "sha256-SNaqhco+byhYb1LUe2s7QBAjdjJlAV5sXUlQgGoa6g0=",
+    "lastModified": 1786811382
+  },
+  "nixpkgs": {
+    "type": "github",
+    "owner": "NixOS",
+    "repo": "nixpkgs",
+    "rev": "0e251e24a4f24e036a084b6b4b2d2491af4167f4",
+    "narHash": "sha256-yNJd40f11EzXBjSByCB7IPpeFFAdeoSKKM67dGkfFoU=",
+    "lastModified": 1786599213
+  }
+}

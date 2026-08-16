@@ -1,7 +1,30 @@
-{ config, pkgs, lib, wrappers, finix, flakeRegistry, ... }:
+{ config, pkgs, lib, wrappers, finix, sources, ... }:
 let
 
+wrappers = import ./wrappers { inherit pkgs; };
 xdg-utils-perlless = pkgs.callPackage ./xdg-utils-perlless.nix { };
+
+flakeRegistry = builtins.toFile "flake-registry.json" (
+  builtins.toJSON {
+    version = 2;
+
+    flakes = [
+      {
+        from = {
+          type = "indirect";
+          id = "nixpkgs";
+        };
+
+        to = {
+          type = "github";
+          owner = "NixOS";
+          repo =  "nixpkgs";
+          rev = sources.nixpkgs.rev;
+        };
+      }
+    ];
+  }
+);
 
 # https://github.com/emersion/xdg-desktop-portal-wlr/issues/395 still helps it seems.
 xdg-desktop-portal-wlr = pkgs.xdg-desktop-portal-wlr.overrideAttrs (old: {
@@ -394,7 +417,8 @@ providers.privileges.rules = [
     pkgs.lsp-plugins
   ];
 
-  security.pam.environment.NH_FLAKE.default = "/home/jagerroni/dotfiles";
+  security.pam.environment.NH_FILE.default = "/home/jagerroni/dotfiles/fi.nix";
+  security.pam.environment.NH_ATTRP.default = "finixConfigurations.necomac";
   security.pam.environment.NIX_PATH.default = "nixpkgs=flake:nixpkgs";
 
   environment.systemPackages = with pkgs; [
@@ -443,5 +467,6 @@ providers.privileges.rules = [
     wrappers.waybar-master
     start-waybar-sound
     wrappers.mango
+    tack
   ];
 }
