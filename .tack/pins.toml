@@ -30,3 +30,6 @@ url = "github:NixOS/nixpkgs/nixos-unstable"
 
 [inputs.finix]
 url = "github:finix-community/finix/main"
+
+[inputs.finix-spec]
+url = "github:iwishiwasonsrcdump/finix/main"
