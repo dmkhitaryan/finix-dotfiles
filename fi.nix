@@ -58,6 +58,39 @@ in
         modulesPath = toString sources.nixpkgs + "/nixos/modules";
       };
     };
+
+    necoarc = mkHost {
+      system = "x86_64-linux";
+      modules = with sources.finix.nixosModules; [
+        (./hosts/necoarc/configuration.nix)
+        nix-daemon
+        nano
+        chronyd
+        brightnessctl
+        openssh
+        sysklogd
+        limine
+        sudo
+        polkit
+        rtkit
+        getty
+        bash
+        dhcpcd
+        iwd
+        gvfs
+        ly
+        gnome-keyring
+        xwayland-satellite
+        power-profiles-daemon
+        pipewire
+        wireplumber
+        bluetooth
+      ];
+      specialArgs = {
+        finix = sources.finix;
+        modulesPath = toString sources.nixpkgs + "/nixos/modules";
+      };
+    };
   };
 
 

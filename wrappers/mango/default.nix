@@ -35,7 +35,7 @@ pkgs.symlinkJoin {
   postBuild = ''
     wrapProgram "$out/bin/mango" \
       --add-flags "-c ${./config.conf}"
-    
+
     rm "$out/share/wayland-sessions/mango.desktop"
 
     cat > "$out/share/wayland-sessions/mango.desktop" <<EOF

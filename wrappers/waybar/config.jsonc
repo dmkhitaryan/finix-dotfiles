@@ -15,7 +15,7 @@
 
     "modules-center": [ ],
 
-    "modules-right": [ 
+    "modules-right": [
         "tray",
         "network",
         "cpu",
@@ -68,7 +68,7 @@
         "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nGateway: {gwaddr}",
         "on-click": "iwmenu -l fuzzel"
     },
-    
+
     "cpu": {
         "interval": 2,
         "format": "{usage}% ",
@@ -113,7 +113,7 @@
     // This intentionally targets the Asahi macsmc power-supply device,
     // rather than relying on UPower.
     "battery": {
-        "bat": "macsmc-battery",
+        "bat": "@BATTERY@",
         "interval": 5,
         "states": {
             "warning": 30,

@@ -1,4 +1,4 @@
-{ pkgs ? (builtins.getFlake "/home/jagerroni/dotfiles").nixosConfigurations.necomac.pkgs }:
+{ pkgs ? (builtins.getFlake "/home/jagerroni/dotfiles").nixosConfigurations.necomac.pkgs, hostName ? null, }:
 
 # To nix run: nix run -f ~/dotfiles/nixos/wrappers <program>
 {
@@ -6,6 +6,7 @@
   urxvt = (import ./urxvt { inherit pkgs; });
   zsh = (import ./zsh { inherit pkgs; });
   fuzzel = (import ./fuzzel { inherit pkgs; });
-  waybar-master = (import ./waybar { inherit pkgs; });
+  waybar-master = (import ./waybar { inherit pkgs hostName; });
   mango = (import ./mango { inherit pkgs; });
+  kanshi = (import ./kanshi { inherit pkgs hostName; });
 }

@@ -1,5 +1,6 @@
 {
 pkgs,
+hostName ? null,
 }:
 let
   # TODO: drop once https://github.com/NixOS/nixpkgs/pull/549633
@@ -23,7 +24,7 @@ let
         owner = "Alexays";
         repo = "Waybar";
         rev = "master";
-        hash = "sha256-uFfKkAbLn4AgX0uZWlYNUxRUOdRp0x4WKXiOvQqhyy4=";
+        hash = "sha256-grYWj1RHrkhM0NCIymTsZyObuQsCVf1kuzLaThwMxvc=";
       };
 
       buildInputs = old.buildInputs ++ [
@@ -33,6 +34,26 @@ let
 
       mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
   });
+
+    battery =
+      if hostName == "necoarc" then
+        "BAT0"
+      else if hostName == "necomac" then
+        "macsmc-battery"
+      else
+        null;
+
+    waybarConfig =
+      if battery == null then
+        ./config.jsonc
+      else
+        pkgs.writeText "waybar-config.jsonc" ''
+          ${builtins.replaceStrings
+            [ "@BATTERY@" ]
+            [ battery ]
+            (builtins.readFile ./config.jsonc)}
+        '';
+
 in
 pkgs.symlinkJoin {
   name = "waybar-master-wrapped-${waybar-master.version}";
@@ -40,7 +61,7 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/waybar" \
-      --add-flags "--config ${./config.jsonc}" \
+      --add-flags "--config ${waybarConfig}" \
       --add-flags "--style ${./style.css}"
   '';
   meta.mainProgram = "waybar";
