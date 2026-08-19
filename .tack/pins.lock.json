@@ -11,16 +11,16 @@
     "type": "github",
     "owner": "iwishiwasonsrcdump",
     "repo": "finix",
-    "rev": "3d8eeab6525691663879e3399b41fa4f22253bb4",
-    "narHash": "sha256-ITYe4w6WdDVauc2LsLciHFUz1JPeLeOk9ydaQy7GkHo=",
-    "lastModified": 1786910568
+    "rev": "fb298a2063e3bf227c95089eca6753baeac5776d",
+    "narHash": "sha256-BRxY+DES+FYtI2aqBVelu+0cCG629gObc7X7noP/vUU=",
+    "lastModified": 1787049529
   },
   "nixpkgs": {
     "type": "github",
     "owner": "NixOS",
     "repo": "nixpkgs",
-    "rev": "e5bdc4a41d4c072fe1e3787eaa0320a384741d44",
-    "narHash": "sha256-FBJRXmbGXiSUDvYEbfLYRkckayyZ6SK1UEqhCrIZ2Cs=",
-    "lastModified": 1786862985
+    "rev": "0ae2bc1419c3f345984c2629e72e7a631820fa4d",
+    "narHash": "sha256-vXNVDVtvfiQuXthP0NHPFdNvvMTkGpx0UP8oddIWbNk=",
+    "lastModified": 1787070829
   }
 }
