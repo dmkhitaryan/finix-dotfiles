@@ -9,4 +9,5 @@
   waybar-master = (import ./waybar { inherit pkgs hostName; });
   mango = (import ./mango { inherit pkgs; });
   kanshi = (import ./kanshi { inherit pkgs hostName; });
+  niri = (import ./niri { inherit pkgs; });
 }
