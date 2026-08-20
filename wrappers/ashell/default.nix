@@ -1,0 +1,13 @@
+{
+  pkgs,
+}:
+pkgs.symlinkJoin {
+  name = "ashell-wrapped-${pkgs.ashell.version}";
+  paths = [ ashell ];
+  nativeBuildInputs = [ pkgs.makeWrapper ];
+  postBuild = ''
+    wrapProgram "$out/bin/ashell" \
+      --add-flags "-c ${./config.toml}"
+  '';
+  meta.mainProgram = "ashell";
+}
