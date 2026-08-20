@@ -61,6 +61,11 @@ in
 
     necoarc = mkHost {
       system = "x86_64-linux";
+#      overlays = [
+#        (final: prev: {
+#          xdg-desktop-portal = final.callPackage ./flatpakless/xdg-desktop-portal-flakeless.nix { };
+#        })
+#      ];
       modules = with sources.finix.nixosModules; [
         (./hosts/necoarc/configuration.nix)
         nix-daemon

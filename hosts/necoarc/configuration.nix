@@ -77,6 +77,21 @@ let
       ];
     }
   );
+
+  start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
+    until
+      wpctl get-volume @DEFAULT_AUDIO_SINK@ \
+        >/dev/null 2>&1 &&
+      wpctl get-volume @DEFAULT_AUDIO_SOURCE@ \
+        >/dev/null 2>&1
+    do
+      sleep 0.2
+    done
+
+    sleep 1
+
+    exec ashell
+  '';
 in
 {
 
@@ -225,7 +240,7 @@ in
     enable = true;
     portals = with pkgs; [
       xdg-desktop-portal-gtk
-      xdg-desktop-portal-wlr
+      xdg-desktop-portal-gnome
     ];
   };
 
@@ -257,11 +272,11 @@ in
     "/share/icons"
   ];
 
-  environment.etc."xdg/xdg-desktop-portal/mango-portals.conf".text = ''
+  environment.etc."xdg/xdg-desktop-portal/niri-portals.conf".text = ''
      [preferred]
-     default=wlr;gtk;
-     org.freedesktop.impl.portal.Screenshot=wlr;
-     org.freedesktop.impl.portal.ScreenCast=wlr;
+     default=gnome;gtk;
+     org.freedesktop.impl.portal.Screenshot=gnome;
+     org.freedesktop.impl.portal.ScreenCast=gnome;
   ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
 
   environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
@@ -355,11 +370,12 @@ in
     slurp
     swaynotificationcenter
     wrappers.waybar-master
-    wrappers.mango
+    wrappers.niri
+    wrappers.ashell
     wrappers.kanshi
     tack
     start-pipewire
-    start-waybar-sound
+    start-ashell
     rfkill-unblock
   ];
 }

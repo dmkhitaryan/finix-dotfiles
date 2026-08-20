@@ -3,7 +3,7 @@
 }:
 pkgs.symlinkJoin {
   name = "ashell-wrapped-${pkgs.ashell.version}";
-  paths = [ ashell ];
+  paths = [ pkgs.ashell ];
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/ashell" \

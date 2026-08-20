@@ -2,11 +2,15 @@
   pkgs,
 }:
 let
+  inherit (pkgs) lib;
+
+  gardendevd = false;
+  mdevd-keventd = false;
 
   udevApi =
-    if config.services.gardendevd.enable then
+    if gardendevd then
       pkgs.libudev-garden
-    else if config.services.mdevd.enable || config.services.keventd.enable then
+    else if mdevd-keventd then
       pkgs.libudev-zero
     else
       null;
@@ -20,8 +24,9 @@ let
     };
 
     withSystemd = false;
+  };
 
-    niri = pkgs.niri.override overrideAttrs;
+  niri = pkgs.niri.override overrideAttrs;
 in
 pkgs.symlinkJoin {
   name = "niri-wrapped-${niri.version}";
@@ -38,7 +43,7 @@ pkgs.symlinkJoin {
     Encoding=UTF-8
     Name=Niri
     DesktopNames=Niri    Comment=mango WM
-    Exec=${lib.getExe' pkgs.dbus "dbus-run-session"} -- $out/bin/niri-session
+    Exec=${lib.getExe' pkgs.dbus "dbus-run-session"} -- $out/bin/niri --session
     Icon=niri
     Type=Application
     EOF
