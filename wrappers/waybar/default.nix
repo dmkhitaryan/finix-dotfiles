@@ -24,7 +24,7 @@ let
         owner = "Alexays";
         repo = "Waybar";
         rev = "master";
-        hash = "sha256-grYWj1RHrkhM0NCIymTsZyObuQsCVf1kuzLaThwMxvc=";
+        hash = "sha256-1JFW1v/v539cS0M3KwCf3NAo9ulNawyaOTxDe1naPe4=";
       };
 
       buildInputs = old.buildInputs ++ [

@@ -25,9 +25,9 @@ in
   finixConfigurations = {
     necomac = mkHost {
       system = "aarch64-linux";
-      overlays = [ (import ./apple-silicon-support/packages/overlay.nix)];
+      overlays = [ (import ./hosts/necomac/apple-silicon-support/packages/overlay.nix)];
       modules = with sources.finix.nixosModules; [
-        (./configuration.nix)
+        (./hosts/necomac/configuration.nix)
         nix-daemon
         nano
         brightnessctl

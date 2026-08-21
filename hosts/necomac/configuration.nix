@@ -1,8 +1,8 @@
 { config, pkgs, lib, wrappers, finix, sources, ... }:
 let
 
-wrappers = import ./wrappers { inherit pkgs; };
-xdg-utils-perlless = pkgs.callPackage ./xdg-utils-perlless.nix { };
+wrappers = import ../../wrappers { inherit pkgs; hostName = config.networking.hostName; };
+xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
 
 flakeRegistry = builtins.toFile "flake-registry.json" (
   builtins.toJSON {
@@ -247,7 +247,7 @@ in
   boot.kernelPatches = [ # ~20% battery boost on M1 Pro!
     {
       name = "apple-use-pmp";
-      patch = ./patches/apple-use-pmp.patch;
+      patch = ../../patches/apple-use-pmp.patch;
     }
   ];
 
@@ -414,6 +414,14 @@ providers.privileges.rules = [
     requirePassword = false;
     command = "/run/current-system/sw/bin/reboot";
   }
+  {
+    users = [ "jagerroni" ];
+    groups = [ ];
+    runAs = "root";
+    requirePassword = false;
+    command = "/run/current-system/sw/bin/initctl";
+    args = [ "suspend" ];
+  }
 ];
 
   environment.variables.LV2_PATH = lib.makeSearchPath "lib/lv2" [ # All needed for sound on Asahi Linux.
@@ -473,5 +481,6 @@ providers.privileges.rules = [
     start-waybar-sound
     wrappers.mango
     tack
+    wrappers.kanshi
   ];
 }
