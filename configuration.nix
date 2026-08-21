@@ -174,6 +174,7 @@ in
     [
       ./hardware-configuration.nix
       ./apple-silicon-support
+      #./sddm.nix
     ];
 
   # In flake setups, vendor directory must be set explicitly.
@@ -321,7 +322,13 @@ in
     seatd.enable = true;
     rtkit.enable = true;
     bluetooth.enable = true;
- };
+    mdevd.hotplugRules = lib.mkMerge [
+      (lib.mkAfter ''
+        SUBSYSTEM=input;.* root:input 660
+        SUBSYSTEM=sound;.* root:audio 660
+      '')
+    ];
+  };
 
   networking.hostName = "necomac";
   time.timeZone = "Asia/Yerevan";
@@ -398,16 +405,14 @@ providers.privileges.rules = [
     groups = [ ];
     runAs = "root";
     requirePassword = false;
-    command = "/run/current-system/sw/bin/initctl";
-    args = [ "poweroff" ];
+    command = "/run/current-system/sw/bin/poweroff";
   }
   {
     users = [ "jagerroni" ];
     groups = [ ];
     runAs = "root";
     requirePassword = false;
-    command = "/run/current-system/sw/bin/initctl";
-    args = [ "reboot" ];
+    command = "/run/current-system/sw/bin/reboot";
   }
 ];
 
