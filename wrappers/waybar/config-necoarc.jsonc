@@ -1,9 +1,0 @@
-{
-    "battery": {
-        "bat": "BAT0"
-    },
-
-    "include": [
-        "config.jsonc"
-    ]
-}

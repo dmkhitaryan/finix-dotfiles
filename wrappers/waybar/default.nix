@@ -35,13 +35,31 @@ let
       mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
   });
 
-  config =
-    if hostName == "necoarc" then
-      builtins.toString ./config-necoarc.jsonc
-    else if hostName == "necomac" then
-      builtins.toString ./config-necomac.jsonc
-    else
-      builtins.toString ./config.jsonc;
+    config =
+      if hostName == "necoarc" then
+        pkgs.writeText "waybar-config-necoarc.jsonc" ''
+          {
+            "battery": {
+              "bat": "BAT0"
+            },
+            "include": [
+              "${builtins.toString ./config.jsonc}"
+            ]
+          }
+        ''
+      else if hostName == "necomac" then
+        pkgs.writeText "waybar-config-necomac.jsonc" ''
+          {
+            "battery": {
+              "bat": "macsmc-battery"
+            },
+            "include": [
+              "${builtins.toString ./config.jsonc}"
+            ]
+          }
+        ''
+      else
+        builtins.toString ./config.jsonc;
 
 in
 pkgs.symlinkJoin {
