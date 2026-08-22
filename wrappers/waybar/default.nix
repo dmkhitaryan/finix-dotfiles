@@ -35,24 +35,13 @@ let
       mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
   });
 
-    battery =
-      if hostName == "necoarc" then
-        "BAT0"
-      else if hostName == "necomac" then
-        "macsmc-battery"
-      else
-        null;
-
-    waybarConfig =
-      if battery == null then
-        ./config.jsonc
-      else
-        pkgs.writeText "waybar-config.jsonc" ''
-          ${builtins.replaceStrings
-            [ "@BATTERY@" ]
-            [ battery ]
-            (builtins.readFile ./config.jsonc)}
-        '';
+  config =
+    if hostName == "necoarc" then
+      builtins.toString ./config-necoarc.jsonc
+    else if hostName == "necomac" then
+      builtins.toString ./config-necomac.jsonc
+    else
+      builtins.toString ./config.jsonc;
 
 in
 pkgs.symlinkJoin {
@@ -61,8 +50,8 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/waybar" \
-      --add-flags "--config ${waybarConfig}" \
-      --add-flags "--style ${./style.css}"
+      --add-flags "--config ${config}" \
+      --add-flags "--style ${builtins.toString ./style.css}"
   '';
   meta.mainProgram = "waybar";
 }

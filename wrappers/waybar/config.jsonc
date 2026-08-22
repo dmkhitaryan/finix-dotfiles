@@ -109,11 +109,7 @@
         "on-scroll-down": "brightnessctl set 2%-"
     },
 
-    // Waybar's battery module reads Linux power_supply/sysfs directly.
-    // This intentionally targets the Asahi macsmc power-supply device,
-    // rather than relying on UPower.
     "battery": {
-        "bat": "@BATTERY@",
         "interval": 5,
         "states": {
             "warning": 30,

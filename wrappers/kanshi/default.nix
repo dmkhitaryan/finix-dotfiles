@@ -6,9 +6,9 @@
 let
   config =
     if hostName == "necoarc" then
-      "/home/kibter/finix-dotfiles/wrappers/kanshi/config-necoarc"
+      builtins.toString ./config-necoarc
     else if hostName == "necomac" then
-      "/home/jagerroni/dotfiles/wrappers/kanshi/config-necomac"
+      builtins.toString ./config-necomac
     else
       "";
 in

@@ -34,7 +34,7 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/mango" \
-      --add-flags "-c ${./config.conf}"
+      --add-flags "-c ${builtins.toString ./config.conf}"
 
     rm "$out/share/wayland-sessions/mango.desktop"
 

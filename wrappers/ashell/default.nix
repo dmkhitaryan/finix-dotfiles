@@ -7,7 +7,7 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/ashell" \
-      --add-flags "-c ${./config.toml}"
+      --add-flags "-c ${builtins.toString ./config.toml}"
   '';
   meta.mainProgram = "ashell";
 }

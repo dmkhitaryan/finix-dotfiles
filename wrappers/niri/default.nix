@@ -34,7 +34,7 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/niri" \
-      --add-flags "-c ${./config.kdl}"
+      --add-flags "-c ${builtins.toString ./config.kdl}"
 
     rm "$out/share/wayland-sessions/niri.desktop"
 
