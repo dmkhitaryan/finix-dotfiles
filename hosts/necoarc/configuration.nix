@@ -120,7 +120,7 @@ in
     };
     nvidia = {
       enable = true;
-      package = config.boot.kernelPackages.nvidiaPackages.latest;
+      #package = config.boot.kernelPackages.nvidiaPackages.latest;
       modesetting.enable = true;
       kernelModule = "open";
       power.suspend.enable = true;
@@ -158,6 +158,10 @@ in
     chrony.enable = true;
     bluetooth.enable = true;
     dbus.enable = true;
+    dbus.packages = with pkgs; [
+      dconf
+      thunar
+    ];
     dhcpcd.enable = true;
     iwd.enable = true;
     ly.enable = true;
@@ -219,6 +223,7 @@ in
     };
   };
 
+  boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.initrd.supportedFilesystems.btrfs.enable = true;
   boot.initrd.supportedFilesystems.vfat.enable = true;
@@ -235,6 +240,7 @@ in
     "nvidia_uvm"
     "nvidia_drm"
   ];
+  boot.kernelModules = [ "legion_laptop" ];
 
   xdg.portal = {
     enable = true;
@@ -310,22 +316,28 @@ in
         "usr/audio"
       ];
     }
-   {
-      users = [ "kibter" ];
-      groups = [ ];
-      runAs = "root";
-      requirePassword = false;
-      command = "/run/current-system/sw/bin/initctl";
-      args = [ "poweroff" ];
-    }
     {
-      users = [ "kibter" ];
-      groups = [ ];
-      runAs = "root";
-      requirePassword = false;
-      command = "/run/current-system/sw/bin/initctl";
-      args = [ "reboot" ];
-    }
+       users = [ "kibter" ];
+       groups = [ ];
+       runAs = "root";
+       requirePassword = false;
+       command = "/run/current-system/sw/bin/poweroff";
+     }
+     {
+       users = [ "kibter" ];
+       groups = [ ];
+       runAs = "root";
+       requirePassword = false;
+       command = "/run/current-system/sw/bin/reboot";
+     }
+     {
+       users = [ "kibter" ];
+       groups = [ ];
+       runAs = "root";
+       requirePassword = false;
+       command = "/run/current-system/sw/bin/initctl";
+       args = [ "suspend" ];
+     }
   ];
 
   security.pam.environment = {
@@ -355,7 +367,7 @@ in
     wrappers.fuzzel
     wrappers.firefox
     xdg-utils-perlless
-    legcord
+    vesktop
     swaybg
     yazi
     dconf
