@@ -281,8 +281,7 @@ in
   environment.etc."xdg/xdg-desktop-portal/niri-portals.conf".text = ''
      [preferred]
      default=gnome;gtk;
-     org.freedesktop.impl.portal.Screenshot=gnome;
-     org.freedesktop.impl.portal.ScreenCast=gnome;
+     org.freedesktop.impl.portal.FileChooser=gtk;
   ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
 
   environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
