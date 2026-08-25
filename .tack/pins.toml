@@ -33,3 +33,6 @@ url = "github:finix-community/finix/main"
 
 [inputs.finix-test]
 url = "github:dmkhitaryan/finix/packages-as-attrset"
+
+[inputs.finix-community]
+url = "github:finix-community/community-modules"

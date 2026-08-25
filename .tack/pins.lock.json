@@ -3,24 +3,32 @@
     "type": "github",
     "owner": "finix-community",
     "repo": "finix",
-    "rev": "b82cda10224d5cb932650b27541bdd973bcfbecb",
-    "narHash": "sha256-HaeqB/B3sU+5+rs3o6nuoaf7Wwr7HhRJsJqCXY6rdow=",
-    "lastModified": 1787343975
+    "rev": "78fd549fa5410ad1e5683efbba2d0f1728c12f3d",
+    "narHash": "sha256-mU5vhbdK8uBO1Cgc7pxUo5OadG2mb+TbU1mFhylEZz4=",
+    "lastModified": 1787524290
+  },
+  "finix-community": {
+    "type": "github",
+    "owner": "finix-community",
+    "repo": "community-modules",
+    "rev": "c0c28a064ae0e5f832b9a452ea4ed95da4d77166",
+    "narHash": "sha256-u4pGrR06LMkaJviL6lKS7hzmpi6K4XBe9C6nsV5C5CQ=",
+    "lastModified": 1787604931
   },
   "finix-test": {
     "type": "github",
     "owner": "dmkhitaryan",
     "repo": "finix",
-    "rev": "4e4ca5038cdc995bd9948da66ced9360f80c02fd",
-    "narHash": "sha256-0DHNdrhWNVG4ojtrqwquexbmrZNf0eZXgL7JaYcrNWw=",
-    "lastModified": 1787490583
+    "rev": "d8685cc40325bfd2494ec84b533af4c49ca4d972",
+    "narHash": "sha256-T5Tc6kzxKQ8lEFLy9YaGggockZ8Xy/OvAEjk6R9FWc0=",
+    "lastModified": 1787495726
   },
   "nixpkgs": {
     "type": "github",
     "owner": "NixOS",
     "repo": "nixpkgs",
-    "rev": "2c423e03bbafcff28bfadc6781a4a8257f205cb5",
-    "narHash": "sha256-dt4WdcvsA8/RCe+VZZwqU0X+XMM3wBbGCWA0/sFWzGo=",
-    "lastModified": 1787360063
+    "rev": "56c02bc00adcf003215cc4bd996d6efaf4cff188",
+    "narHash": "sha256-9i/VTdusq/+NM/tz+J1Re+ojkMB8MBf0QshnYfzHz30=",
+    "lastModified": 1787498568
   }
 }
