@@ -52,7 +52,9 @@ in
         pipewire
         wireplumber
         bluetooth
-      ];
+      ] ++ (with sources.finix-community.nixosModules; [
+        fastfetch
+      ]);
       specialArgs = {
         finix = sources.finix;
         modulesPath = toString sources.nixpkgs + "/nixos/modules";

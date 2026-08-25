@@ -276,6 +276,7 @@ in
      packages = [ pkgs.asahi-audio ];
   };
   brightnessctl.enable = true;
+  fastfetch.enable = true;
   wireplumber.enable = true;
   sudo.enable = true;
   nano.enable = true;
@@ -309,6 +310,8 @@ in
   ];
 
   services = {
+    #bootchart.enable = true;
+    #bootchart.stop.conditions = [ "service/ly/ready" ];
     ly.enable = true;
     openssh.enable = true;
     polkit.enable = true;
@@ -468,7 +471,6 @@ providers.privileges.rules = [
     dconf
     start-ashell
     thunar
-    fastfetch
     nh
     playerctl
     tree
