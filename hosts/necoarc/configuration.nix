@@ -222,7 +222,7 @@ in
       LC_TIME = "en_GB.UTF-8";
     };
   };
-
+  programs.modprobe.blacklist = [ "nouevau" ];
   boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.initrd.supportedFilesystems.btrfs.enable = true;
@@ -360,6 +360,7 @@ in
     flameshot
     libnotify
     wl-clipboard-rs
+    xsel
     foot
     adwaita-icon-theme
     catppuccin-cursors.frappeLavender
@@ -388,5 +389,6 @@ in
     start-pipewire
     start-ashell
     rfkill-unblock
+    lutris-free
   ];
 }
