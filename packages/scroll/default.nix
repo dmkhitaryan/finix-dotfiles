@@ -31,12 +31,7 @@ let
   sway-unwrapped' = sway-unwrapped.override (
     o:
     let
-      wlrootsAttr =
-        lib.head (
-          lib.filter
-            (lib.hasPrefix "wlroots")
-            (lib.attrNames o)
-        );
+      wlrootsAttr = lib.head (lib.filter (lib.hasPrefix "wlroots") (lib.attrNames o));
     in
     {
       libinput = libinput';

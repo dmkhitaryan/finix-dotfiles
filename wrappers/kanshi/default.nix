@@ -12,15 +12,15 @@ let
     else
       "";
 in
-  pkgs.symlinkJoin {
-    name = "kanshi-wrapped-${pkgs.kanshi.version}";
-    paths = [ pkgs.kanshi ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+pkgs.symlinkJoin {
+  name = "kanshi-wrapped-${pkgs.kanshi.version}";
+  paths = [ pkgs.kanshi ];
+  nativeBuildInputs = [ pkgs.makeWrapper ];
 
-    postBuild = ''
-      wrapProgram "$out/bin/kanshi" \
-        --add-flags "-c ${config}"
+  postBuild = ''
+    wrapProgram "$out/bin/kanshi" \
+      --add-flags "-c ${config}"
   '';
 
-    meta.mainProgram = "kanshi";
-  }
+  meta.mainProgram = "kanshi";
+}

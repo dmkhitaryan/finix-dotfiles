@@ -1,7 +1,17 @@
-{ config, pkgs, sources, finix, patchedNvidia, ... }:
+{
+  config,
+  pkgs,
+  sources,
+  finix,
+  patchedNvidia,
+  ...
+}:
 let
   xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
-  wrappers = import ../../wrappers { inherit pkgs; hostName = config.networking.hostName; };
+  wrappers = import ../../wrappers {
+    inherit pkgs;
+    hostName = config.networking.hostName;
+  };
 
   rfkill-unblock = pkgs.writeShellScriptBin "rfkill-unblock" ''
     exec ${pkgs.util-linux}/bin/rfkill unblock all
@@ -32,16 +42,17 @@ let
     (pkgs.pipewire.override {
       enableSystemd = false;
       udev = pkgs.libudev-zero;
-    }).overrideAttrs (old: {
-      preConfigure = (old.preConfigure or "") + ''
-        export PKG_CONFIG_PATH="${pkgs.libudev-zero}/lib/pkgconfig:$PKG_CONFIG_PATH"
-        export NIX_LDFLAGS="-L${pkgs.libudev-zero}/lib $NIX_LDFLAGS"
-      '';
+    }).overrideAttrs
+      (old: {
+        preConfigure = (old.preConfigure or "") + ''
+          export PKG_CONFIG_PATH="${pkgs.libudev-zero}/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export NIX_LDFLAGS="-L${pkgs.libudev-zero}/lib $NIX_LDFLAGS"
+        '';
 
-      patches = (old.patches or [ ]) ++ [
-        "${finix}/modules/programs/pipewire/pipewire.patch"
-      ];
-  });
+        patches = (old.patches or [ ]) ++ [
+          "${finix}/modules/programs/pipewire/pipewire.patch"
+        ];
+      });
 
   start-waybar-sound = pkgs.writeShellScriptBin "start-waybar-sound" ''
     until
@@ -70,7 +81,7 @@ let
           to = {
             type = "github";
             owner = "NixOS";
-            repo =  "nixpkgs";
+            repo = "nixpkgs";
             rev = sources.nixpkgs.rev;
           };
         }
@@ -168,26 +179,29 @@ in
     udev.enable = true;
 
     nix-daemon = {
-       enable = true;
-       package = pkgs.nixVersions.latest;
-       settings = {
-         allow-import-from-derivation = false;
-         auto-optimise-store = true;
-         connect-timeout = 5;
-         fallback = true;
-         flake-registry = flakeRegistry;
-         experimental-features = [ "nix-command" "flakes" ];
-         max-jobs = 2;
-         cores = 4;
-         nix-path = "";
-         trusted-users = [
-           "root"
-           "@wheel"
-         ];
-         warn-dirty = "false";
+      enable = true;
+      package = pkgs.nixVersions.latest;
+      settings = {
+        allow-import-from-derivation = false;
+        auto-optimise-store = true;
+        connect-timeout = 5;
+        fallback = true;
+        flake-registry = flakeRegistry;
+        experimental-features = [
+          "nix-command"
+          "flakes"
+        ];
+        max-jobs = 2;
+        cores = 4;
+        nix-path = "";
+        trusted-users = [
+          "root"
+          "@wheel"
+        ];
+        warn-dirty = "false";
 
-       };
-     };
+      };
+    };
 
     openssh.enable = true;
     polkit.enable = true;
@@ -205,7 +219,15 @@ in
   users.users.kibter = {
     isNormalUser = true;
     description = "Mowzas!";
-    extraGroups = [ "wheel" "video" "input" "render" "audio" "pipewire" config.services.seatd.group ];
+    extraGroups = [
+      "wheel"
+      "video"
+      "input"
+      "render"
+      "audio"
+      "pipewire"
+      config.services.seatd.group
+    ];
   };
 
   i18n = {
@@ -258,9 +280,9 @@ in
     fontconfig = {
       enable = true;
       defaultFonts = {
-      serif = [ "Iosevka" ];
-      sansSerif = [ "Iosevka" ];
-      monospace = [ "Cozette" ];
+        serif = [ "Iosevka" ];
+        sansSerif = [ "Iosevka" ];
+        monospace = [ "Cozette" ];
       };
     };
 
@@ -279,9 +301,9 @@ in
   ];
 
   environment.etc."xdg/xdg-desktop-portal/niri-portals.conf".text = ''
-     [preferred]
-     default=gnome;gtk;
-     org.freedesktop.impl.portal.FileChooser=gtk;
+    [preferred]
+    default=gnome;gtk;
+    org.freedesktop.impl.portal.FileChooser=gtk;
   ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
 
   environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
@@ -316,27 +338,27 @@ in
       ];
     }
     {
-       users = [ "kibter" ];
-       groups = [ ];
-       runAs = "root";
-       requirePassword = false;
-       command = "/run/current-system/sw/bin/poweroff";
-     }
-     {
-       users = [ "kibter" ];
-       groups = [ ];
-       runAs = "root";
-       requirePassword = false;
-       command = "/run/current-system/sw/bin/reboot";
-     }
-     {
-       users = [ "kibter" ];
-       groups = [ ];
-       runAs = "root";
-       requirePassword = false;
-       command = "/run/current-system/sw/bin/initctl";
-       args = [ "suspend" ];
-     }
+      users = [ "kibter" ];
+      groups = [ ];
+      runAs = "root";
+      requirePassword = false;
+      command = "/run/current-system/sw/bin/poweroff";
+    }
+    {
+      users = [ "kibter" ];
+      groups = [ ];
+      runAs = "root";
+      requirePassword = false;
+      command = "/run/current-system/sw/bin/reboot";
+    }
+    {
+      users = [ "kibter" ];
+      groups = [ ];
+      runAs = "root";
+      requirePassword = false;
+      command = "/run/current-system/sw/bin/initctl";
+      args = [ "suspend" ];
+    }
   ];
 
   security.pam.environment = {

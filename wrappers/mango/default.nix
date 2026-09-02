@@ -1,5 +1,5 @@
 {
-pkgs,
+  pkgs,
 }:
 let
   inherit (pkgs) lib;
@@ -14,17 +14,14 @@ let
   mango = mango'.override (
     o:
     let
-      wlrootsAttr =
-        lib.head
-          (lib.filter (lib.hasPrefix "wlroots") (lib.attrNames o));
+      wlrootsAttr = lib.head (lib.filter (lib.hasPrefix "wlroots") (lib.attrNames o));
     in
     {
       inherit libinput;
 
-      ${wlrootsAttr} =
-        o.${wlrootsAttr}.override {
-          inherit libinput;
-        };
+      ${wlrootsAttr} = o.${wlrootsAttr}.override {
+        inherit libinput;
+      };
     }
   );
 in

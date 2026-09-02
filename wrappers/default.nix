@@ -1,4 +1,7 @@
-{ pkgs ? (builtins.getFlake "/home/jagerroni/dotfiles").nixosConfigurations.necomac.pkgs, hostName ? null, }:
+{
+  pkgs ? (import ../../.tack).nixpkgs,
+  hostName ? null,
+}:
 
 # To nix run: nix run -f ~/dotfiles/nixos/wrappers <program>
 {

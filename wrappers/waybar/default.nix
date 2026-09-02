@@ -1,6 +1,6 @@
 {
-pkgs,
-hostName ? null,
+  pkgs,
+  hostName ? null,
 }:
 let
   # TODO: drop once https://github.com/NixOS/nixpkgs/pull/549633
@@ -16,50 +16,49 @@ let
     };
   });
 
-  waybar-master =
-    pkgs.waybar.overrideAttrs (old: {
-      version = "0.15.0";
+  waybar-master = pkgs.waybar.overrideAttrs (old: {
+    version = "0.15.0";
 
-      src = pkgs.fetchFromGitHub {
-        owner = "Alexays";
-        repo = "Waybar";
-        rev = "master";
-        hash = "sha256-1JFW1v/v539cS0M3KwCf3NAo9ulNawyaOTxDe1naPe4=";
-      };
+    src = pkgs.fetchFromGitHub {
+      owner = "Alexays";
+      repo = "Waybar";
+      rev = "master";
+      hash = "sha256-1JFW1v/v539cS0M3KwCf3NAo9ulNawyaOTxDe1naPe4=";
+    };
 
-      buildInputs = old.buildInputs ++ [
-        pkgs.modemmanager
-        libcava1
-      ];
+    buildInputs = old.buildInputs ++ [
+      pkgs.modemmanager
+      libcava1
+    ];
 
-      mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
+    mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
   });
 
-    config =
-      if hostName == "necoarc" then
-        pkgs.writeText "waybar-config-necoarc.jsonc" ''
-          {
-            "battery": {
-              "bat": "BAT0"
-            },
-            "include": [
-              "${builtins.toString ./config.jsonc}"
-            ]
-          }
-        ''
-      else if hostName == "necomac" then
-        pkgs.writeText "waybar-config-necomac.jsonc" ''
-          {
-            "battery": {
-              "bat": "macsmc-battery"
-            },
-            "include": [
-              "${builtins.toString ./config.jsonc}"
-            ]
-          }
-        ''
-      else
-        builtins.toString ./config.jsonc;
+  config =
+    if hostName == "necoarc" then
+      pkgs.writeText "waybar-config-necoarc.jsonc" ''
+        {
+          "battery": {
+            "bat": "BAT0"
+          },
+          "include": [
+            "${builtins.toString ./config.jsonc}"
+          ]
+        }
+      ''
+    else if hostName == "necomac" then
+      pkgs.writeText "waybar-config-necomac.jsonc" ''
+        {
+          "battery": {
+            "bat": "macsmc-battery"
+          },
+          "include": [
+            "${builtins.toString ./config.jsonc}"
+          ]
+        }
+      ''
+    else
+      builtins.toString ./config.jsonc;
 
 in
 pkgs.symlinkJoin {

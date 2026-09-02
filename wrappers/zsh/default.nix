@@ -1,10 +1,10 @@
-{ pkgs, }:
+{ pkgs }:
 
 let
-zdotdir = pkgs.writeTextDir ".zshrc" ''
-  ${builtins.readFile ./.zshrc}
-  source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-'';
+  zdotdir = pkgs.writeTextDir ".zshrc" ''
+    ${builtins.readFile ./.zshrc}
+    source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  '';
 in
 pkgs.symlinkJoin {
   name = "zsh-wrapped-${pkgs.zsh.version}";
