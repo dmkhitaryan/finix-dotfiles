@@ -131,11 +131,19 @@ in
     };
     nvidia = {
       enable = true;
-      #package = config.boot.kernelPackages.nvidiaPackages.latest;
+      package = config.boot.kernelPackages.nvidiaPackages.latest;
       modesetting.enable = true;
       kernelModule = "open";
       power.suspend.enable = true;
       power.suspend.notifier = "kernel";
+
+      prime = {
+      offload.enable = true;
+      offload.enableOffloadCmd = true;
+
+      nvidiaBusId = "PCI:1@0:0:0";
+      amdgpuBusId = "PCI:6@0:0:0";
+    };
     };
   };
 
@@ -244,7 +252,7 @@ in
       LC_TIME = "en_GB.UTF-8";
     };
   };
-  programs.modprobe.blacklist = [ "nouevau" ];
+  programs.modprobe.blacklist = [ "nouveau" ];
   boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.initrd.supportedFilesystems.btrfs.enable = true;
@@ -257,6 +265,7 @@ in
   ];
   boot.initrd.kernelModules = [
     "efivarfs"
+    "amdgpu"
     "nvidia"
     "nvidia_modeset"
     "nvidia_uvm"
