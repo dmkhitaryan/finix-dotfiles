@@ -32,7 +32,7 @@ url = "github:NixOS/nixpkgs/nixos-unstable"
 url = "github:finix-community/finix/main"
 
 [inputs.finix-test]
-url = "github:dmkhitaryan/finix/enable-sysklogd-conditionally"
+url = "github:dmkhitaryan/finix/ly-optional-brightnessctl"
 
 [inputs.finix-community]
 url = "github:finix-community/community-modules"
