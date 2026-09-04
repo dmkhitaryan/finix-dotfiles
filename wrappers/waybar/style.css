@@ -161,7 +161,7 @@ window#waybar {
 #memory,
 #temperature,
 #wireplumber,
-#backlight,
+#custom-backlight,
 #battery,
 #clock,
 #custom-notification,
@@ -258,7 +258,7 @@ window#waybar {
         );
 }
 
-#backlight {
+#custom-backlight {
     background:
         linear-gradient(
             180deg,

@@ -12,6 +12,7 @@ let
   wrappers = import ../../wrappers {
     inherit pkgs;
     hostName = config.networking.hostName;
+    wireplumber = config.programs.wireplumber.package;
   };
   xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
 
@@ -627,7 +628,6 @@ in
     })
     iputils
     iwmenu
-    quickshell
     iproute2
     # flameshot
     libnotify
@@ -636,9 +636,8 @@ in
     adwaita-icon-theme
     bibata-cursors
     wrappers.fuzzel
-    wrappers.firefox
+    wrappers.firefox.firefox-bin-void
     xdg-utils-perlless
-    # legcord
     oo7-server-fix
     oo7-portal
     asahi-audio
@@ -667,5 +666,6 @@ in
     microfetch
     pcmanfm
     ly
+    dwlb
   ];
 }

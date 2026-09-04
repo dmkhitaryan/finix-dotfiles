@@ -18,21 +18,27 @@
   nss_latest,
   pciutils,
   pipewire,
-}:
 
+}:
 let
-  firefoxXbps = fetchurl {
-    url = "https://repo-default.voidlinux.org/current/aarch64/firefox-154.0_1.aarch64-musl.xbps";
-    hash = "sha256-vIcK9RlLVfmeS1bNUOwrq5Ac24m+2MobRZMFicDNBaY=";
+  firefoxXbps = fetchurl rec {
+    pname = "firefox";
+    version = "155.0_1";
+    url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
+    hash = "sha256-tfMuPiNZaiknWjaV5t+B+VYVlIaz+p/JzprVr3+l37I=";
   };
 
-  libffiXbps = fetchurl {
-    url = "https://repo-default.voidlinux.org/current/aarch64/libffi-3.3_2.aarch64-musl.xbps";
+  libffiXbps = fetchurl rec {
+    pname = "libffi";
+    version = "3.3_2";
+    url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
     hash = "sha256-TjJ/vXRSO3tnn/ESz65cTgKtsqLa6fIhXbETkREBv7Q=";
   };
 
-  libjpegXbps = fetchurl {
-    url = "https://repo-default.voidlinux.org/current/aarch64/libjpeg-turbo-3.1.4.1_1.aarch64-musl.xbps";
+  libjpegXbps = fetchurl rec {
+    pname = "libjpeg-turbo";
+    version = "3.1.4.1_1";
+    url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
     hash = "sha256-S163ZgGp58lPnU2C/9Vp5hgu8MUVXJHmH/nX+jUjRuQ=";
   };
 
@@ -50,9 +56,9 @@ let
   };
 in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   pname = "firefox-void-bin";
-  version = "154.0";
+  version = builtins.head (lib.splitString "_" firefoxXbps.version);
 
   dontUnpack = true;
   dontConfigure = true;
@@ -154,7 +160,12 @@ stdenv.mkDerivation {
   '';
 
   passthru = {
-    inherit gtk3;
+    inherit
+      gtk3
+      firefoxXbps
+      libffiXbps
+      libjpegXbps
+      ;
 
     applicationName = "Firefox";
     binaryName = "firefox";

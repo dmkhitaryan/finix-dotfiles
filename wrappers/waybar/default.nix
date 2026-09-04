@@ -1,6 +1,7 @@
 {
   pkgs,
   hostName ? null,
+  wireplumber ? pkgs.wireplumber,
 }:
 let
   # TODO: drop once https://github.com/NixOS/nixpkgs/pull/549633
@@ -16,23 +17,46 @@ let
     };
   });
 
-  waybar-master = pkgs.waybar.overrideAttrs (old: {
-    version = "0.15.0";
+  waybar-master =
+    (pkgs.waybar.override {
+      cavaSupport = false;
+      evdevSupport = false;
+      gpsSupport = false;
+      inputSupport = false;
+      jackSupport = false;
+      mpdSupport = false;
+      #    mprisSupport = false;
+      niriSupport = false;
+      nlSupport = true;
+      pipewireSupport = false;
+      pulseSupport = false;
+      rfkillSupport = false;
+      sndioSupport = false;
+      systemdSupport = false;
+      traySupport = false;
+      udevSupport = true;
+      upowerSupport = false;
+      wireplumberSupport = true;
+      withMediaPlayer = false;
 
-    src = pkgs.fetchFromGitHub {
-      owner = "Alexays";
-      repo = "Waybar";
-      rev = "master";
-      hash = "sha256-1JFW1v/v539cS0M3KwCf3NAo9ulNawyaOTxDe1naPe4=";
-    };
+      inherit wireplumber;
+      udev = pkgs.libudev-zero;
+    }).overrideAttrs
+      (old: {
+        version = "0.15.0";
 
-    buildInputs = old.buildInputs ++ [
-      pkgs.modemmanager
-      libcava1
-    ];
+        src = pkgs.fetchFromGitHub {
+          owner = "Alexays";
+          repo = "Waybar";
+          rev = "master";
+          hash = "sha256-G6AcGuevhkYflQHhJq9GnLhEMgcI51Y6MYKBQvdRPDc=";
+        };
 
-    mesonFlags = old.mesonFlags ++ [ "-Dmango=true" ];
-  });
+        mesonFlags = old.mesonFlags ++ [
+          "-Dmango=true"
+          "-Dwwan=disabled"
+        ];
+      });
 
   config =
     if hostName == "necoarc" then

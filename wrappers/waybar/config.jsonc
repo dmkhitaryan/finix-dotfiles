@@ -16,16 +16,14 @@
     "modules-center": [ ],
 
     "modules-right": [
-        "tray",
         "network",
         "cpu",
         "memory",
         "temperature",
         "wireplumber",
-        "backlight",
+        "custom/backlight",
         "battery",
         "clock",
-        "custom/notification",
     ],
 
     "mango/workspaces": {
@@ -101,12 +99,13 @@
           ""
        ]
     },
-    "backlight": {
-        "format": "{percent}% {icon}",
-        "format-icons": ["󰃞", "󰃟", "󰃠"],
-        "scroll-step": 2,
-        "on-scroll-up": "brightnessctl set +2%",
-        "on-scroll-down": "brightnessctl set 2%-"
+
+    "custom/backlight": {
+        "exec": "printf '%d%%\\n' \"$(( $(brightnessctl g) * 100 / $(brightnessctl m) ))\"",
+        "interval": 2,
+        "format": "{} 󰃠",
+        "on-scroll-up": "brightnessctl -q set +2%",
+        "on-scroll-down": "brightnessctl -q set 2%-"
     },
 
     "battery": {
@@ -125,9 +124,10 @@
     },
 
     "clock": {
+        "locale": "C",
         "format": "{:%H:%M} ",
         "format-alt": "{:%A, %d %B} 󰃭",
-        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
             "mode": "month",
             "weeks-pos": "right",
@@ -140,27 +140,6 @@
                 "today": "<span color='#fb4934'><b><u>{}</u></b></span>"
             }
         }
-    },
-
-    "custom/notification": {
-        "tooltip": false,
-        "format": "{icon}",
-        "format-icons": {
-            "notification": "<span foreground='#fb4934'><sup></sup></span>",
-            "none": "",
-            "dnd-notification": "<span foreground='#fb4934'><sup></sup></span>",
-            "dnd-none": "",
-            "inhibited-notification": "<span foreground='#fb4934'><sup></sup></span>",
-            "inhibited-none": "",
-            "dnd-inhibited-notification": "<span foreground='#fb4934'><sup></sup></span>",
-            "dnd-inhibited-none": ""
-        },
-        "return-type": "json",
-        "exec-if": "which swaync-client",
-        "exec": "swaync-client -swb",
-        "on-click": "sleep 0.1 && swaync-client -t -sw",
-        "on-click-right": "swaync-client -d -sw",
-        "escape": true
     },
 
     "custom/power": {

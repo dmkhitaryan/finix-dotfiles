@@ -9,6 +9,7 @@ let
 
   wrapFirefox = pkgs.wrapFirefox.override {
     inherit xdg-utils;
+    ffmpeg_9 = pkgs.ffmpeg;
   };
 
   preferences = {
@@ -248,12 +249,19 @@ let
   };
 
 in
-wrapFirefox firefox-bin-void {
-  extraPolicies = {
-    Preferences = builtins.mapAttrs (_: value: {
-      Value = value;
-      Status = preferencesStatus;
-    }) preferences;
-  };
-
+let
+  mkWrappedFirefox =
+    firefox:
+    wrapFirefox firefox {
+      extraPolicies = {
+        Preferences = builtins.mapAttrs (_: value: {
+          Value = value;
+          Status = preferencesStatus;
+        }) preferences;
+      };
+    };
+in
+{
+  firefox-bin-void = mkWrappedFirefox firefox-bin-void;
+  firefox-bin = mkWrappedFirefox pkgs.firefox-bin;
 }
