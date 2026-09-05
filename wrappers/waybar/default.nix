@@ -1,7 +1,8 @@
 {
   pkgs,
-  hostName ? null,
-  wireplumber ? pkgs.wireplumber,
+  hostName,
+  wireplumber,
+  udevPkg,
 }:
 let
   # TODO: drop once https://github.com/NixOS/nixpkgs/pull/549633
@@ -40,7 +41,7 @@ let
       withMediaPlayer = false;
 
       inherit wireplumber;
-      udev = pkgs.libudev-zero;
+      udev = udevPkg;
     }).overrideAttrs
       (old: {
         version = "0.15.0";

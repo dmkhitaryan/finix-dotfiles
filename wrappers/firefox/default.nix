@@ -263,5 +263,5 @@ let
 in
 {
   firefox-bin-void = mkWrappedFirefox firefox-bin-void;
-  firefox-bin = mkWrappedFirefox pkgs.firefox-bin;
+  firefox-bin = mkWrappedFirefox pkgs.firefox-bin-unwrapped;
 }
