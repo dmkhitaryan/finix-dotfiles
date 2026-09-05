@@ -648,7 +648,6 @@ in
     start-pipewire
     lsp-plugins
     swaybg
-    papirus-icon-theme
     dconf
     nh
     playerctl
