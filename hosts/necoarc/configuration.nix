@@ -396,7 +396,7 @@ in
     adwaita-icon-theme
     catppuccin-cursors.frappeLavender
     wrappers.fuzzel
-    wrappers.firefox
+    wrappers.firefox.firefox-bin
     xdg-utils-perlless
     vesktop
     swaybg
