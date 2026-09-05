@@ -1,5 +1,5 @@
 {
-  pkgs ? (import ../../.tack).nixpkgs {
+  pkgs ? import ((import ../.tack).nixpkgs.outPath) {
     system = builtins.currentSystem;
     config = {
       allowUnfree = true;
