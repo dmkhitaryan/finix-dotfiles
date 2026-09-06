@@ -32,7 +32,7 @@ url = "github:NixOS/nixpkgs/nixos-unstable"
 url = "github:finix-community/finix/main"
 
 [inputs.finix-test]
-url = "github:dmkhitaryan/finix/ly-optional-brightnessctl"
+url = "github:dmkhitaryan/finix/default-user-shell-changes"
 
 [inputs.finix-community]
 url = "github:finix-community/community-modules"

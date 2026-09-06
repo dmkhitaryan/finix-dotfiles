@@ -19,9 +19,9 @@
     "type": "github",
     "owner": "dmkhitaryan",
     "repo": "finix",
-    "rev": "82a916687a1d293a7d6687fcc8e432f9232bbe2d",
-    "narHash": "sha256-5PcBJeK8tETK6pk66aR7K+bvk421gnBkefnKtgVATsU=",
-    "lastModified": 1788595939
+    "rev": "d5e208735da5f2040fc9b261b1f93f2e0437aca2",
+    "narHash": "sha256-LupvAVg2Bw83YIYpbbNyOBNB3K/yEPxe5b1X/SfNH1Q=",
+    "lastModified": 1788714930
   },
   "nixpkgs": {
     "type": "github",
