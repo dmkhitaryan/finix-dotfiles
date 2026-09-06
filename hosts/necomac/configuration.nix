@@ -15,6 +15,8 @@ let
     wireplumber = config.programs.wireplumber.package;
   };
   xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
+  avd-fw = pkgs.callPackage ../../packages/avd-fw { };
+  libva-v4l2-request = pkgs.callPackage ../../packages/libva-v4l2-request { };
 
   xdg-desktop-portal-rdmaless =
     (pkgs.xdg-desktop-portal.override {
@@ -449,6 +451,7 @@ in
       (lib.mkAfter ''
         SUBSYSTEM=input;.* root:input 660
         SUBSYSTEM=sound;.* root:audio 660
+        SUBSYSTEM=media;.* root:video 660
       '')
     ];
   };
@@ -471,10 +474,11 @@ in
     ];
     packages = with pkgs; [ ];
   };
-  users.defaultUserShell = pkgs.bashInteractive;
 
   hardware.graphics.enable = true;
   hardware.graphics.package = mesaAsahi;
+  hardware.graphics.extraPackages = [ libva-v4l2-request ];
+  hardware.firmware = [ avd-fw ];
 
   finit.services = {
     speakersafetyd = {
