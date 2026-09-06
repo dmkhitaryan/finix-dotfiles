@@ -97,7 +97,8 @@ let
         ];
       });
 
-  start-pipewire = pkgs.writeShellScriptBin "start-pipewire" ''
+  start-pipewire = pkgs.writeScriptBin "start-pipewire" ''
+    #!${pkgs.dash}/bin/dash
     export ALSA_CONFIG_UCM2="${pkgs.alsa-ucm-conf-asahi}/share/alsa/ucm2"
 
     /run/wrappers/bin/doas -n \
@@ -133,7 +134,9 @@ let
       /run/current-system/sw/bin/initctl cond set usr/audio
   '';
 
-  ashell-battery-capacity = pkgs.writeShellScriptBin "ashell-battery-capacity" ''
+  ashell-battery-capacity = pkgs.writeScriptBin "ashell-battery-capacity" ''
+    #!${pkgs.dash}/bin/dash
+
     battery=/sys/class/power_supply/macsmc-battery
 
     last=""
@@ -154,7 +157,9 @@ let
     done
   '';
 
-  start-ashell = pkgs.writeShellScriptBin "start-ashell" ''
+  start-ashell = pkgs.writeScriptBin "start-ashell" ''
+    #!${pkgs.dash}/bin/dash
+
     until
       wpctl get-volume @DEFAULT_AUDIO_SINK@ \
         >/dev/null 2>&1 &&
@@ -169,7 +174,9 @@ let
     exec ashell -c /home/jagerroni/.config/ashell/config.toml
   '';
 
-  start-waybar-sound = pkgs.writeShellScriptBin "start-waybar-sound" ''
+  start-waybar-sound = pkgs.writeScriptBin "start-waybar-sound" ''
+    #!${pkgs.dash}/bin/dash
+
     until
       wpctl get-volume @DEFAULT_AUDIO_SINK@ >/dev/null 2>&1 &&
       wpctl get-volume @DEFAULT_AUDIO_SOURCE@ >/dev/null 2>&1
@@ -308,7 +315,9 @@ in
   finit.tasks.battery-charge-limit = {
     description = "Set battery limit (to 80%)";
     runlevels = "2345";
-    command = pkgs.writeShellScript "battery-charge-limit" ''
+    command = pkgs.writeScript "battery-charge-limit" ''
+      #!${pkgs.dash}/bin/dash
+
       path=/sys/class/power_supply/macsmc-battery/charge_control_end_threshold
 
       while [ ! -e "$path" ]; do
