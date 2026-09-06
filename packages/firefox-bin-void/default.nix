@@ -23,23 +23,23 @@
 let
   firefoxXbps = fetchurl rec {
     pname = "firefox";
-    version = "155.0_1";
+  version = "155.0_1";
     url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
-    hash = "sha256-tfMuPiNZaiknWjaV5t+B+VYVlIaz+p/JzprVr3+l37I=";
+  hash = "sha256-tfMuPiNZaiknWjaV5t+B+VYVlIaz+p/JzprVr3+l37I=";
   };
 
   libffiXbps = fetchurl rec {
     pname = "libffi";
-    version = "3.3_2";
+  version = "3.3_2";
     url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
-    hash = "sha256-TjJ/vXRSO3tnn/ESz65cTgKtsqLa6fIhXbETkREBv7Q=";
+  hash = "sha256-TjJ/vXRSO3tnn/ESz65cTgKtsqLa6fIhXbETkREBv7Q=";
   };
 
   libjpegXbps = fetchurl rec {
     pname = "libjpeg-turbo";
-    version = "3.1.4.1_1";
+  version = "3.1.4.1_1";
     url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
-    hash = "sha256-S163ZgGp58lPnU2C/9Vp5hgu8MUVXJHmH/nX+jUjRuQ=";
+  hash = "sha256-S163ZgGp58lPnU2C/9Vp5hgu8MUVXJHmH/nX+jUjRuQ=";
   };
 
   nsprFixed = nspr.overrideAttrs (old: {
@@ -171,12 +171,12 @@ stdenv.mkDerivation rec {
     binaryName = "firefox";
     libName = "firefox";
 
-    ffmpegSupport = true;
-    gssSupport = false;
-    alsaSupport = true;
-    pipewireSupport = true;
-    sndioSupport = true;
-    jackSupport = true;
+    withFFmpeg = true;
+    withGSSAPI = false;
+    withALSA = true;
+    withPipewire = true;
+    withSndio = true;
+    withJACK = true;
 
     requireSigning = true;
     allowAddonSideload = false;
