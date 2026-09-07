@@ -647,7 +647,6 @@ in
     wl-clipboard-rs
     foot
     adwaita-icon-theme
-    bibata-cursors
     wrappers.fuzzel
     wrappers.firefox.firefox-bin-void
     xdg-utils-perlless
