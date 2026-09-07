@@ -1,0 +1,16 @@
+diff --git a/src/input/keyboard.h b/src/input/keyboard.h
+index XXXXXXX..YYYYYYY 100644
+--- a/src/input/keyboard.h
++++ b/src/input/keyboard.h
+@@ -440,10 +440,11 @@ keybinding(uint32_t state, bool locked, uint32_t mods, xkb_keysym_t sym,
+ 			else
+ 				handled = 0;
+
++			bool allow_conflict = k->isallowconflict;
+ 			k->func(&k->arg);
+
+ 			// only match the first keybind
+-			if (!k->isallowconflict)
++			if (!allow_conflict)
+ 				break;
+ 		}

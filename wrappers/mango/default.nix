@@ -4,14 +4,14 @@
 let
   inherit (pkgs) lib;
 
-  mango' = pkgs.mangowc;
+  mango' = pkgs.mango;
 
   libinput = pkgs.libinput.override {
     udev = pkgs.libudev-zero;
     wacomSupport = false;
   };
 
-  mango = mango'.override (
+  mango = (mango'.override (
     o:
     let
       wlrootsAttr = lib.head (lib.filter (lib.hasPrefix "wlroots") (lib.attrNames o));
@@ -23,7 +23,9 @@ let
         inherit libinput;
       };
     }
-  );
+  )).overrideAttrs (old: {
+     patches = [ ../../patches/mango-keybind-fix.patch ];
+  });
 in
 pkgs.symlinkJoin {
   name = "mango-wrapped-${mango.version}";
