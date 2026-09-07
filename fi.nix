@@ -227,15 +227,13 @@ in
         })
 
         (final: prev: {
-          scenefx = prev.scenefx.overrideAttrs (old: {
-            postPatch =
-              (old.postPatch or "")
-              + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
-                sed -i '1i#include <linux/stddef.h>' \
-                  include/scenefx/types/fx/clipped_region.h
-              '';
-          });
-        })
+  scenefx = prev.scenefx.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      find include -name clipped_region.h -print -exec \
+        sed -i 's/__always_inline/inline __attribute__((always_inline))/g' {} +
+    '';
+  });
+})
 
         (final: prev: {
           pipewire =
