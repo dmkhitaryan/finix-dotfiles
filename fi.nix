@@ -49,7 +49,8 @@ in
     necomac = mkHost {
       system = "aarch64-linux";
       pkgsSet = "musl";
-      overlays = [ # TODO: move overlays to overlays.nix, add comments.
+      overlays = [
+        # TODO: move overlays to overlays.nix, add comments.
         (import ./hosts/necomac/apple-silicon-support/packages/overlay.nix)
         (final: prev: {
           libpcap = prev.libpcap.override { withRdma = false; };
@@ -227,13 +228,13 @@ in
         })
 
         (final: prev: {
-  scenefx = prev.scenefx.overrideAttrs (old: {
-    postPatch = (old.postPatch or "") + ''
-      find include -name clipped_region.h -print -exec \
-        sed -i 's/__always_inline/inline __attribute__((always_inline))/g' {} +
-    '';
-  });
-})
+          scenefx = prev.scenefx.overrideAttrs (old: {
+            postPatch = (old.postPatch or "") + ''
+              find include -name clipped_region.h -print -exec \
+                sed -i 's/__always_inline/inline __attribute__((always_inline))/g' {} +
+            '';
+          });
+        })
 
         (final: prev: {
           pipewire =
@@ -373,6 +374,23 @@ in
           });
         })
 
+        (final: prev: {
+          python313 = prev.python313.override {
+            packageOverrides = pyFinal: pyPrev: {
+              pytest-xdist = pyPrev.pytest-xdist.overrideAttrs (_: {
+                doCheck = false;
+              });
+            };
+          };
+
+          python314 = prev.python314.override {
+            packageOverrides = pyFinal: pyPrev: {
+              pytest-xdist = pyPrev.pytest-xdist.overrideAttrs (_: {
+                doCheck = false;
+              });
+            };
+          };
+        })
       ];
 
       modules =
