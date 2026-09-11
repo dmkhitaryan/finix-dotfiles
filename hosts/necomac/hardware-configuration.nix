@@ -12,10 +12,10 @@
 {
 
   boot.initrd.availableKernelModules = [
-    "ahci"
-    "xhci_pci"
+    #    "ahci"
+    "sdhci_pci"
     "usb_storage"
-    "sd_mod"
+    #    "sd_mod"
   ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ ];
@@ -24,7 +24,7 @@
   hardware.firmware = [ pkgs.linux-firmware ];
 
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/3ac0f3dc-710b-498f-beae-1ce808ff4dcb";
+    device = "/dev/disk/by-uuid/a36f23af-ed86-4d3a-933b-972a51effb80";
     fsType = "ext4";
   };
 

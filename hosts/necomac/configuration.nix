@@ -397,14 +397,11 @@ in
       packages = [ pkgs.asahi-audio ];
     };
     brightnessctl.enable = true;
-    fastfetch.enable = false;
     wireplumber.enable = true;
-    sudo.enable = false;
     doas.enable = true;
     nano.enable = true;
     nano.defaultEditor = true;
     bash.enable = true;
-    gnome-keyring.enable = false;
   };
 
   services.dbus.packages = [
@@ -666,8 +663,8 @@ in
     tree
     btop
     libarchive
-    grim
-    slurp
+    #grim
+    #slurp
     mako
     wrappers.waybar-master
     start-waybar-sound
@@ -677,6 +674,5 @@ in
     microfetch
     pcmanfm
     ly
-    dwlb
   ];
 }

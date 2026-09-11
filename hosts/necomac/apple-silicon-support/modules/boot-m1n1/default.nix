@@ -9,9 +9,14 @@ let
 
   bootM1n1 =
     if (config.boot.m1n1CustomLogo != null) then
-      pkgs'.m1n1.override {
-        customLogo = config.boot.m1n1CustomLogo;
-      }
+      pkgs'.m1n1.override
+        {
+          customLogo = config.boot.m1n1CustomLogo;
+        }
+        .overrideAttrs
+        (old: {
+          nativeBuildInputs = builtins.filter (x: x != pkgs'.imagemagick) old.nativeBuildInputs;
+        })
     else
       pkgs'.m1n1;
 

@@ -59,6 +59,8 @@ let
 
               APPLE_PMGR_MISC = yes;
               APPLE_PMGR_PWRSTATE = yes;
+
+              NVME_HOST_AUTH = lib.mkForce no;
             };
             features.rust = true;
           }
