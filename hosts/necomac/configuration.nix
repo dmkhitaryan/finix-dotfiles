@@ -312,6 +312,9 @@ in
   hardware.asahi.peripheralFirmwareDirectory = /boot/vendorfw;
 
   finit.runlevel = 3;
+  finit.cgroups.system.settings = {
+    "cpu.weight" = 100;
+  };
 
   finit.services.nix-daemon = {
     environment.CURL_CA_BUNDLE = config.security.pki.caBundle;
@@ -390,7 +393,7 @@ in
     limine = {
       enable = true;
       settings.editor_enabled = true; # Disable on systems that need security
-      maxGenerations = 10;
+      maxGenerations = 5;
     };
 
     pipewire = {
