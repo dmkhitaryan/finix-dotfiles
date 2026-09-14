@@ -13,6 +13,7 @@ let
     inherit pkgs;
     hostName = config.networking.hostName;
     wireplumber = config.programs.wireplumber.package;
+    udevPkg = pkgs.libudev-zero;
   };
   xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
   avd-fw = pkgs.callPackage ../../packages/avd-fw { };
@@ -256,13 +257,15 @@ let
 
       enablePatentEncumberedCodecs = false;
       withValgrind = false;
+
+      udev = pkgs.libudev-zero;
     }).overrideAttrs
       (old: {
         mesonFlags =
           map (
             flag:
             if lib.hasPrefix "-Dtools=" flag then
-              "-Dtools=asahi"
+              "-Dtools="
             else if lib.hasPrefix "-Dintel-rt=" flag then
               "-Dintel-rt=disabled"
             else if lib.hasPrefix "-Dteflon=" flag then
@@ -393,11 +396,13 @@ in
     pipewire = {
       enable = true;
       alsa.enable = true;
-      package = pipewireFixed;
+      package = pkgs.pipewire;
       packages = [ pkgs.asahi-audio ];
     };
+    tuigreet.enable = true;
     brightnessctl.enable = true;
     wireplumber.enable = true;
+    #wireplumber.package = pkgs.wireplumber;
     doas.enable = true;
     nano.enable = true;
     nano.defaultEditor = true;
@@ -430,12 +435,13 @@ in
   services = {
     #bootchart.enable = true;
     #bootchart.stop.conditions = [ "service/ly/ready" ];
-    ly.enable = true;
     openssh.enable = true;
     polkit.enable = true;
+    polkit.package = lib.mkForce pkgs.polkit;
     anacron.enable = true;
     sysklogd.enable = true;
     dbus.enable = true;
+    getty.enable = true;
     mdevd.enable = true;
     mdevd.nlgroups = 4;
     keventd.enable = false;
@@ -663,8 +669,8 @@ in
     tree
     btop
     libarchive
-    #grim
-    #slurp
+    grim
+    slurp
     mako
     wrappers.waybar-master
     start-waybar-sound
@@ -673,6 +679,5 @@ in
     wrappers.kanshi
     microfetch
     pcmanfm
-    ly
   ];
 }
