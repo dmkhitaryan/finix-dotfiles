@@ -150,7 +150,8 @@ in
   programs = {
     bash.enable = true;
     brightnessctl.enable = true;
-    gnome-keyring.enable = true;
+    gnome-keyring.enable = false;
+    openbox.enable = true;
 
     limine = {
       enable = true;
@@ -169,12 +170,53 @@ in
 
     sudo.enable = true;
     wireplumber.enable = true;
+    xorg.modules = [ pkgs.xf86-video-amdgpu ];
     xwayland-satellite.enable = true;
-
   };
+
+  finit.services.ryzen-co = {
+  description = "Apply Ryzen Curve Optimizer";
+  path = [ pkgs.coreutils ];
+
+  command = pkgs.writeShellScript "ryzen-co-watch" ''
+    echo 0 > /sys/devices/system/cpu/cpufreq/boost
+    last=""
+
+    while true; do
+      profile="$(cat /sys/firmware/acpi/platform_profile)"
+
+      if [ "$profile" != "$last" ]; then
+        case "$profile" in
+          low-power)
+            temp=80
+            ;;
+          balanced)
+            temp=80
+            ;;
+          performance)
+            temp=85
+            ;;
+          *)
+            temp=80
+            ;;
+        esac
+
+        echo "Applying CO -20 and ''${temp}C limit for profile: $profile"
+        ${pkgs.ryzenadj}/bin/ryzenadj --set-coall=-20 --tctl-temp="$temp"
+        last="$profile"
+      fi
+
+      sleep 1
+    done
+  '';
+
+  respawn = true;
+  log = true;
+};
 
   services = {
     chrony.enable = true;
+    docker.enable = true;
     bluetooth.enable = true;
     dbus.enable = true;
     dbus.packages = with pkgs; [
@@ -185,6 +227,7 @@ in
     iwd.enable = true;
     ly.enable = true;
     udev.enable = true;
+    udev.packages = [ pkgs.usbmuxd ];
 
     nix-daemon = {
       enable = true;
@@ -234,9 +277,16 @@ in
       "render"
       "audio"
       "pipewire"
+      "docker"
       config.services.seatd.group
     ];
   };
+
+  users.users.usbmux = {
+    isSystemUser = true;
+    group = "usbmux";
+  };
+  users.groups.usbmux = {};
 
   i18n = {
     defaultLocale = "en_GB.UTF-8";
@@ -253,7 +303,7 @@ in
     };
   };
   programs.modprobe.blacklist = [ "nouveau" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module ];
+  boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module config.boot.kernelPackages.ryzen-smu ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.initrd.supportedFilesystems.btrfs.enable = true;
   boot.initrd.supportedFilesystems.vfat.enable = true;
@@ -271,7 +321,7 @@ in
     "nvidia_uvm"
     "nvidia_drm"
   ];
-  boot.kernelModules = [ "legion_laptop" ];
+  boot.kernelModules = [ "legion_laptop" "ryzen_smu" ];
 
   xdg.portal = {
     enable = true;
@@ -308,6 +358,10 @@ in
     "/share/wireplumber"
     "/share/icons"
   ];
+
+  environment.etc."X11/xinit/xinitrc".text = ''
+    exec openbox-session
+  '';
 
   environment.etc."xdg/xdg-desktop-portal/niri-portals.conf".text = ''
     [preferred]
@@ -421,5 +475,8 @@ in
     start-ashell
     rfkill-unblock
     lutris-free
+    ryzenadj
+    usbmuxd
+    antigravity
   ];
 }

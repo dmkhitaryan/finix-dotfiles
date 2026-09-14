@@ -788,6 +788,7 @@ in
         chronyd
         brightnessctl
         openssh
+        openbox
         sysklogd
         limine
         sudo
@@ -805,6 +806,7 @@ in
         pipewire
         wireplumber
         bluetooth
+        docker
       ];
       specialArgs = {
         finix = sources.finix;
