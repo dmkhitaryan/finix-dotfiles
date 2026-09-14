@@ -1,5 +1,6 @@
 {
   pkgs,
+  udevPkg ? null,
 }:
 
 let
@@ -10,6 +11,7 @@ let
   wrapFirefox = pkgs.wrapFirefox.override {
     inherit xdg-utils;
     ffmpeg_9 = pkgs.ffmpeg;
+    udev = udevPkg;
   };
 
   preferences = {
