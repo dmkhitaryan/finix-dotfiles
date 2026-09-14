@@ -59,15 +59,19 @@ in
         (
           final: prev:
           let
-            php84NoGettext = prev.php84.withExtensions (
-              { enabled, ... }:
-              prev.lib.filter (ext: (ext.extensionName or null) != "gettext") enabled
-            );
+            php84ForLsp = prev.php84.buildEnv {
+              systemdSupport = false;
+              valgrindSupport = false;
+
+              extensions =
+                { enabled, ... }:
+                prev.lib.filter (ext: (ext.extensionName or null) != "gettext") enabled;
+            };
           in
           {
             lsp-plugins =
               (prev.lsp-plugins.override {
-                php84 = php84NoGettext;
+                php84 = php84ForLsp;
 
                 buildVST3 = true;
                 buildVST2 = false;
@@ -85,9 +89,19 @@ in
                     in
                     name != "jack2" && name != "ladspa-header" && name != "gstreamer" && name != "gst-plugins-base"
                   ) (old.buildInputs or [ ]);
+
+                  postPatch =
+                    (old.postPatch or "")
+                    + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
+                      substituteInPlace modules/lsp-runtime-lib/src/main/ipc/Library.cpp \
+                        --replace-fail \
+                          "::dlmopen(LM_ID_NEWLM, str, RTLD_NOW)" \
+                          "::dlopen(str, RTLD_NOW)"
+                    '';
                 });
           }
         )
+
         (final: prev: {
           spandsp = prev.spandsp.overrideAttrs (old: {
             checkPhase =
@@ -99,45 +113,68 @@ in
         })
 
         (final: prev: {
-          gst_all_1 = prev.gst_all_1 // {
-            gstreamer =
-              (prev.gst_all_1.gstreamer.override {
+          gst_all_1 = prev.gst_all_1.overrideScope (
+            gstFinal: gstPrev: {
+              gstreamer = gstPrev.gstreamer.override {
                 withRust = false;
-              }).overrideAttrs
-                (old: {
-                  mesonFlags = (old.mesonFlags or [ ]) ++ [
-                    "-Ddoc=disabled"
-                  ];
+                enableDocumentation = false;
+              };
 
-                  nativeBuildInputs = builtins.filter (p: !(builtins.isAttrs p && prev.lib.getName p == "hotdoc")) (
-                    old.nativeBuildInputs or [ ]
-                  );
-                });
-          };
-        })
-
-        (final: prev: {
-          llvmPackages = prev.llvmPackages.overrideScope (
-            llvmFinal: llvmPrev: {
-              clang-unwrapped = llvmPrev.clang-unwrapped.override {
-                enableClangToolsExtra = false;
-                enableManpages = false;
-
-                devExtraCmakeFlags = [
-                  # Keep Clang from OOMing while still allowing the rest of the
-                  # system build to use more cores.
-                  "-DLLVM_PARALLEL_COMPILE_JOBS=3"
-                  "-DLLVM_PARALLEL_LINK_JOBS=1"
-                ];
+              gst-plugins-base = gstPrev.gst-plugins-base.override {
+                enableDocumentation = false;
               };
             }
           );
         })
 
+        (
+          final: prev:
+          let
+            trimLlvm =
+              llvmPkgs:
+              llvmPkgs.overrideScope (
+                llvmFinal: llvmPrev: {
+                  llvm = llvmPrev.llvm.override {
+                    enableManpages = false;
+                    enablePFM = false;
+                    enablePolly = false;
+                    enableTerminfo = false;
+
+                    devExtraCmakeFlags = [
+                      "-DLLVM_PARALLEL_COMPILE_JOBS=8"
+                      "-DLLVM_PARALLEL_LINK_JOBS=2"
+                    ];
+                  };
+
+                  clang-unwrapped = llvmPrev.clang-unwrapped.override {
+                    enableClangToolsExtra = false;
+                    enableManpages = false;
+
+                    devExtraCmakeFlags = [
+                      "-DLLVM_PARALLEL_COMPILE_JOBS=8"
+                      "-DLLVM_PARALLEL_LINK_JOBS=2"
+                    ];
+                  };
+                }
+              );
+
+            llvm21 = trimLlvm prev.llvmPackages_21;
+            llvm22 = trimLlvm prev.llvmPackages_22;
+          in
+          {
+            llvmPackages_21 = llvm21;
+            llvmPackages_22 = llvm22;
+
+            # Default llvmPackages is LLVM 21 on your current nixpkgs.
+            llvmPackages = llvm21;
+          }
+        )
+
         (final: prev: {
           v4l-utils = prev.v4l-utils.override {
             withGUI = false;
             withBPF = false;
+            udev = prev.libudev-zero;
           };
         })
 
@@ -158,6 +195,10 @@ in
                 nix-fetchers-tests = dummyTests;
                 nix-flake-tests = dummyTests;
                 nix-functional-tests = null;
+
+                nix-store = prev.nixVersions.latest.libs.nix-store.override {
+                  withAWS = false;
+                };
               };
             };
           }
@@ -180,9 +221,281 @@ in
         })
 
         (final: prev: {
-          xwayland = prev.xwayland.override {
-            systemd = prev.systemdLibs;
+          kmod = prev.kmod.override {
+            withDevdoc = false;
           };
+        })
+
+        (final: prev: {
+          libtiff = prev.libtiff.overrideAttrs (old: {
+            nativeBuildInputs = builtins.filter (p: p != prev.sphinx) (old.nativeBuildInputs or [ ]);
+
+            outputs = builtins.filter (
+              output:
+              !builtins.elem output [
+                "doc"
+                "man"
+              ]
+            ) (old.outputs or [ ]);
+          });
+        })
+
+        (final: prev: {
+          gst_all_1 = prev.gst_all_1 // {
+            gstreamer = prev.gst_all_1.gstreamer.override {
+              enableDocumentation = false;
+            };
+
+            gst-plugins-base = prev.gst_all_1.gst-plugins-base.override {
+              enableDocumentation = false;
+            };
+          };
+        })
+
+        (final: prev: {
+          elfutils = prev.elfutils.override {
+            enableDebuginfod = false;
+          };
+        })
+
+        (final: prev: {
+          fontforge = prev.fontforge.override {
+            withGTK = false;
+            withPython = false;
+            withExtras = false;
+          };
+        })
+
+        (final: prev: {
+          sqlite = prev.sqlite.overrideAttrs {
+            doCheck = false;
+            doInstallCheck = false;
+          };
+        })
+
+        (final: prev: {
+          wayland = prev.wayland.override {
+            withDocumentation = false;
+            withTests = false;
+          };
+        })
+
+        (final: prev: {
+          libdrm = prev.libdrm.override {
+            withIntel = false;
+            withValgrind = false;
+          };
+        })
+
+        (final: prev: {
+          m1n1 = prev.m1n1.overrideAttrs {
+            doCheck = false;
+          };
+        })
+
+        (final: prev: {
+          mako =
+            (prev.mako.override {
+              systemdMinimal = prev.basu;
+            }).overrideAttrs
+              {
+                mesonFlags = [ "-Dsd-bus-provider=basu" ];
+              };
+        })
+
+        (final: prev: {
+          libgudev =
+            (prev.libgudev.override {
+              udev = prev.libudev-zero;
+            }).overrideAttrs
+              (old: {
+                doCheck = false;
+                mesonFlags = builtins.filter (p: !prev.lib.hasPrefix "-Dtests=" p) (old.mesonFlags or [ ]) ++ [
+                  "-Dtests=disabled"
+                ];
+              });
+        })
+
+        (final: prev: {
+          seatd = (
+            prev.seatd.override {
+              systemdSupport = false;
+            }
+          );
+        })
+
+        (final: prev: {
+          libusb1 = (
+            prev.libusb1.override {
+              udev = prev.libudev-zero;
+            }
+          );
+        })
+
+        (final: prev: {
+          libcamera = (
+            prev.libcamera.override {
+              udev = prev.libudev-zero;
+            }
+          );
+        })
+
+        (final: prev: {
+          libinput = prev.libinput.override {
+            udev = prev.libudev-zero; # mdevd.
+            wacomSupport = false;
+          };
+
+          wlroots = prev.wlroots.override {
+            libinput = final.libinput;
+          };
+        })
+
+        (final: prev: {
+          greetd = prev.greetd.overrideAttrs (old: {
+            nativeBuildInputs = builtins.filter (p: p != prev.scdoc) (old.nativeBuildInputs or [ ]);
+            postInstall = "";
+          });
+        })
+
+        (final: prev: {
+          linux-pam = prev.linux-pam.override {
+            withLogind = false;
+          };
+          pam = final.linux-pam;
+        })
+
+        (final: prev: {
+          procps = prev.procps.override {
+            withSystemd = false;
+          };
+        })
+
+        (final: prev: {
+          at-spi2-core = prev.at-spi2-core.override {
+            systemdSupport = false;
+          };
+        })
+
+        (final: prev: {
+          polkit =
+            (prev.polkit.override {
+              useSystemd = false;
+              useConsoleKit = true;
+            }).overrideAttrs
+              (old: {
+                buildInputs = builtins.filter (p: p != prev.elogind) (old.buildInputs or [ ]);
+              });
+        })
+
+        (final: prev: {
+          libcanberra =
+            (prev.libcanberra.override {
+              gst_all_1 = final.gst_all_1;
+              withSystemd = false;
+            }).overrideAttrs
+              (old: {
+                postConfigure = (old.postConfigure or "") + ''
+                  sed -i '/^finish_cmds=.*ldconfig -n .*libdir/c\finish_cmds=""' libtool
+                '';
+              });
+        })
+
+        (final: prev: {
+          libcanberra-gtk3 =
+            (prev.libcanberra-gtk3.override {
+              gst_all_1 = final.gst_all_1;
+              withSystemd = false;
+            }).overrideAttrs
+              (old: {
+                postConfigure = (old.postConfigure or "") + ''
+                  sed -i '/^finish_cmds=.*ldconfig -n .*libdir/c\finish_cmds=""' libtool
+                '';
+              });
+        })
+
+        (final: prev: {
+          xdg-desktop-portal-wlr =
+            (prev.xdg-desktop-portal-wlr.override {
+              systemdLibs = prev.basu;
+            }).overrideAttrs
+              (old: {
+                mesonFlags =
+                  builtins.filter (
+                    p: !(prev.lib.hasPrefix "-Dsd-bus-provider=" p) && !(prev.lib.hasPrefix "-Dsystemd=" p)
+                  ) (old.mesonFlags or [ ])
+                  ++ [
+                    "-Dsd-bus-provider=basu"
+                    "-Dsystemd=disabled"
+                  ];
+              });
+        })
+
+        (final: prev: {
+          bluez = prev.bluez.override {
+            udev = prev.libudev-zero;
+          };
+        })
+
+        (final: prev: {
+          rtkit =
+            (prev.rtkit.override {
+              systemdLibs = prev.basu;
+            }).overrideAttrs
+              (old: {
+                mesonFlags = (old.mesonFlags or [ ]) ++ [
+                  (prev.lib.mesonEnable "libsystemd" false)
+                ];
+              });
+        })
+
+        (final: prev: {
+          util-linux = prev.util-linux.override {
+            systemdSupport = false;
+          };
+        })
+
+        (final: prev: {
+          dbus = prev.dbus.override {
+            enableSystemd = false;
+          };
+        })
+
+        (final: prev: {
+          xwayland = prev.xwayland.overrideAttrs (old: {
+            buildInputs = builtins.filter (p: p != prev.systemd) (old.buildInputs or [ ]);
+          });
+        })
+
+        (final: prev: {
+          wireplumber =
+            (prev.wireplumber.override {
+              enableDocs = false;
+              enableGI = false;
+              pipewire = final.pipewire;
+            }).overrideAttrs
+              (old: {
+                postPatch = (old.postPatch or "") + ''
+                  substituteInPlace po/meson.build \
+                    --replace-fail \
+                      "python_po = pymod.find_installation('python3')" \
+                      "python_po = pymod.find_installation('python3', required: false)"
+                '';
+
+                buildInputs = builtins.filter (p: p != prev.systemdLibs) (old.buildInputs or [ ]);
+
+                mesonFlags =
+                  (builtins.filter (
+                    flag:
+                    !prev.lib.hasPrefix "-Dsystemd=" flag
+                    && !prev.lib.hasPrefix "-Dsystemd-system-service=" flag
+                    && !prev.lib.hasPrefix "-Dsystemd-system-unit-dir=" flag
+                  ) (old.mesonFlags or [ ]))
+                  ++ [
+                    "-Dsystemd-system-service=false"
+                    "-Dsystemd=disabled"
+                  ];
+              });
         })
 
         (final: prev: {
@@ -200,19 +513,6 @@ in
                   "-Dflatpak-interfaces=disabled"
                 ];
               });
-        })
-
-        (final: prev: {
-          lsp-plugins = prev.lsp-plugins.overrideAttrs (old: {
-            postPatch =
-              (old.postPatch or "")
-              + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
-                substituteInPlace modules/lsp-runtime-lib/src/main/ipc/Library.cpp \
-                  --replace-fail \
-                    "::dlmopen(LM_ID_NEWLM, str, RTLD_NOW)" \
-                    "::dlopen(str, RTLD_NOW)"
-              '';
-          });
         })
 
         (final: prev: {
@@ -240,17 +540,57 @@ in
           pipewire =
             (prev.pipewire.override {
               enableSystemd = false;
+              systemdLibs = null;
+
               ffadoSupport = false;
               rocSupport = false;
+              zeroconfSupport = false;
+
+              udev = prev.libudev-zero;
+              libdrm = final.libdrm;
             }).overrideAttrs
               (old: {
+                doCheck = false;
+
                 buildInputs = builtins.filter (p: p != prev.modemmanager) (old.buildInputs or [ ]);
 
-                mesonFlags = (old.mesonFlags or [ ]) ++ [
-                  "-Dlogind=disabled"
-                  # No WWAN/LTE/5G modem on this Asahi host; keep normal BlueZ audio only.
-                  "-Dbluez5-backend-native-mm=disabled"
-                ];
+                nativeBuildInputs = builtins.filter (
+                  p:
+                  if prev.lib.isDerivation p then
+                    !(builtins.elem (prev.lib.getName p) [
+                      "docutils"
+                      "doxygen"
+                      "graphviz"
+                    ])
+                  else
+                    true
+                ) (old.nativeBuildInputs or [ ]);
+
+                mesonFlags =
+                  (builtins.filter (
+                    flag:
+                    !prev.lib.hasPrefix "-Ddocs=" flag
+                    && !prev.lib.hasPrefix "-Dinstalled_tests=" flag
+                    && !prev.lib.hasPrefix "-Dman=" flag
+                    && !prev.lib.hasPrefix "-Dlogind=" flag
+                    && !prev.lib.hasPrefix "-Dbluez5-backend-native-mm=" flag
+                  ) (old.mesonFlags or [ ]))
+                  ++ [
+                    "-Ddocs=disabled"
+                    "-Dinstalled_tests=disabled"
+                    "-Dman=disabled"
+                    "-Dlogind=disabled"
+                    "-Dbluez5-backend-native-mm=disabled"
+                  ];
+
+                outputs = builtins.filter (
+                  output:
+                  !builtins.elem output [
+                    "doc"
+                    "man"
+                    "installedTests"
+                  ]
+                ) (old.outputs or [ ]);
               });
         })
 
@@ -377,7 +717,10 @@ in
         (final: prev: {
           python313 = prev.python313.override {
             packageOverrides = pyFinal: pyPrev: {
-              pytest-xdist = pyPrev.pytest-xdist.overrideAttrs (_: {
+              pytest-xdist = pyPrev.pytest-xdist.overridePythonAttrs (_: {
+                doCheck = false;
+              });
+              python-dbusmock = pyPrev.python-dbusmock.overridePythonAttrs (_: {
                 doCheck = false;
               });
             };
@@ -385,7 +728,10 @@ in
 
           python314 = prev.python314.override {
             packageOverrides = pyFinal: pyPrev: {
-              pytest-xdist = pyPrev.pytest-xdist.overrideAttrs (_: {
+              pytest-xdist = pyPrev.pytest-xdist.overridePythonAttrs (_: {
+                doCheck = false;
+              });
+              python-dbusmock = pyPrev.python-dbusmock.overridePythonAttrs (_: {
                 doCheck = false;
               });
             };
@@ -411,8 +757,7 @@ in
           iwd
           niri
           gvfs
-          regreet
-          ly
+          tuigreet
           rtkit
           gnome-keyring
           xwayland-satellite
