@@ -56,6 +56,7 @@ let
         mesonFlags = old.mesonFlags ++ [
           "-Dmango=true"
           "-Dwwan=disabled"
+          "-Dsystemd=disabled"
         ];
       });
 
