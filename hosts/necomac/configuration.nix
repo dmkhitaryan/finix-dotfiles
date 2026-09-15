@@ -367,11 +367,47 @@ in
   };
 
   boot.loader.efi.canTouchEfiVariables = false;
+  
   boot.kernelParams = [
     "appledrm.show_notch=1"
     "zswap.enabled=1"
     "zswap.max_pool_percent=20"
   ];
+  boot.initrd.availableKernelModules = lib.mkForce [
+  "apple-mailbox"
+  "appledrm"
+  "apple_nvmem_spmi"
+  "nvme_apple"
+  "pinctrl-apple-gpio"
+  "macsmc"
+  "macsmc-power"
+  "macsmc-input"
+  "macsmc-hwmon"
+  "macsmc-reboot"
+  "i2c-pasemi-platform"
+  "tps6598x"
+  "apple-dart"
+  "dwc3"
+  "dwc3-of-simple"
+  "xhci-pci"
+  "pcie-apple"
+  "gpio_macsmc"
+  "phy-apple-atc"
+  "nvmem_apple_efuses"
+  "spi-apple"
+  "spi-hid-apple"
+  "spi-hid-apple-of"
+  "rtc-macsmc"
+  "spmi-apple-controller"
+  "apple-dockchannel"
+  "dockchannel-hid"
+  "apple-rtkit-helper"
+  "usb-storage"
+  "xhci-plat-hcd"
+  "usbhid"
+  "hid_generic"
+  "ext4"
+];
   boot.kernelPatches = [
     # ~20% battery boost on M1 Pro!
     {
@@ -428,9 +464,9 @@ in
   };
 
   fonts.packages = [
-    pkgs.iosevka-bin
+    pkgs.spleen
     pkgs.cozette
-    pkgs.nerd-fonts._0xproto
+    pkgs.nerd-fonts.symbols-only
     pkgs.noto-fonts-cjk-sans
     pkgs.noto-fonts-color-emoji
   ];
