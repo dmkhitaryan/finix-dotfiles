@@ -7,8 +7,8 @@ pkgs.symlinkJoin {
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/fuzzel" \
-      --add-flags "--font=Iosevka" \
-      --add-flags "--icon-theme=Adwaita"
+      --add-flags "--font=CozetteVector:size=15" \
+      --add-flags "--icon-theme=Adwaita" \
   '';
   meta.mainProgram = "fuzzel";
 }
