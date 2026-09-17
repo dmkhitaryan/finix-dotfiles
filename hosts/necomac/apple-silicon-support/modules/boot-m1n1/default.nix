@@ -8,17 +8,16 @@ let
   pkgs' = config.hardware.asahi.pkgs;
 
   bootM1n1 =
-    if (config.boot.m1n1CustomLogo != null) then
-      pkgs'.m1n1.override
-        {
-          customLogo = config.boot.m1n1CustomLogo;
-        }
-        .overrideAttrs
-        (old: {
-          nativeBuildInputs = builtins.filter (x: x != pkgs'.imagemagick) old.nativeBuildInputs;
-        })
-    else
-      pkgs'.m1n1;
+    (pkgs'.m1n1.override {
+      customLogo = config.boot.m1n1CustomLogo;
+    }).overrideAttrs
+      (old: {
+        doCheck = false;
+
+        nativeBuildInputs = builtins.filter (
+          p: config.boot.m1n1CustomLogo != null || p != pkgs.imagemagick
+        ) old.nativeBuildInputs;
+      });
 
   bootUBoot = pkgs'.uboot-asahi.override {
     m1n1 = bootM1n1;
