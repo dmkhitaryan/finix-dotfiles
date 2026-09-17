@@ -8,7 +8,6 @@
   ...
 }:
 let
-
   wrappers = import ../../wrappers {
     inherit pkgs;
     hostName = config.networking.hostName;
@@ -367,47 +366,47 @@ in
   };
 
   boot.loader.efi.canTouchEfiVariables = false;
-  
+
   boot.kernelParams = [
     "appledrm.show_notch=1"
     "zswap.enabled=1"
     "zswap.max_pool_percent=20"
   ];
   boot.initrd.availableKernelModules = lib.mkForce [
-  "apple-mailbox"
-  "appledrm"
-  "apple_nvmem_spmi"
-  "nvme_apple"
-  "pinctrl-apple-gpio"
-  "macsmc"
-  "macsmc-power"
-  "macsmc-input"
-  "macsmc-hwmon"
-  "macsmc-reboot"
-  "i2c-pasemi-platform"
-  "tps6598x"
-  "apple-dart"
-  "dwc3"
-  "dwc3-of-simple"
-  "xhci-pci"
-  "pcie-apple"
-  "gpio_macsmc"
-  "phy-apple-atc"
-  "nvmem_apple_efuses"
-  "spi-apple"
-  "spi-hid-apple"
-  "spi-hid-apple-of"
-  "rtc-macsmc"
-  "spmi-apple-controller"
-  "apple-dockchannel"
-  "dockchannel-hid"
-  "apple-rtkit-helper"
-  "usb-storage"
-  "xhci-plat-hcd"
-  "usbhid"
-  "hid_generic"
-  "ext4"
-];
+    "apple-mailbox"
+    "appledrm"
+    "apple_nvmem_spmi"
+    "nvme_apple"
+    "pinctrl-apple-gpio"
+    "macsmc"
+    "macsmc-power"
+    "macsmc-input"
+    "macsmc-hwmon"
+    "macsmc-reboot"
+    "i2c-pasemi-platform"
+    "tps6598x"
+    "apple-dart"
+    "dwc3"
+    "dwc3-of-simple"
+    "xhci-pci"
+    "pcie-apple"
+    "gpio_macsmc"
+    "phy-apple-atc"
+    "nvmem_apple_efuses"
+    "spi-apple"
+    "spi-hid-apple"
+    "spi-hid-apple-of"
+    "rtc-macsmc"
+    "spmi-apple-controller"
+    "apple-dockchannel"
+    "dockchannel-hid"
+    "apple-rtkit-helper"
+    "usb-storage"
+    "xhci-plat-hcd"
+    "usbhid"
+    "hid_generic"
+    "ext4"
+  ];
   boot.kernelPatches = [
     # ~20% battery boost on M1 Pro!
     {
@@ -464,10 +463,9 @@ in
   };
 
   fonts.packages = [
-    pkgs.spleen
     pkgs.cozette
     pkgs.nerd-fonts.symbols-only
-    pkgs.noto-fonts-cjk-sans
+    pkgs.wqy_microhei
     pkgs.noto-fonts-color-emoji
   ];
 
@@ -548,26 +546,6 @@ in
     [screencast]
     chooser_type=dmenu
     chooser_cmd=fuzzel --dmenu --prompt="Share: "
-  '';
-
-  environment.etc."finit.d/getty-tty3.conf".text = ''
-    service [34] name:getty-tty3 restart:10 \
-      ${pkgs.util-linux}/bin/agetty 38400 tty3 linux
-  '';
-
-  environment.etc."finit.d/getty-tty4.conf".text = ''
-    service [34] name:getty-tty4 restart:10 \
-      ${pkgs.util-linux}/bin/agetty 38400 tty4 linux
-  '';
-
-  environment.etc."finit.d/getty-tty5.conf".text = ''
-    service [34] name:getty-tty5 restart:10 \
-      ${pkgs.util-linux}/bin/agetty 38400 tty5 linux
-  '';
-
-  environment.etc."finit.d/getty-tty6.conf".text = ''
-    service [34] name:getty-tty6 restart:10 \
-      ${pkgs.util-linux}/bin/agetty 38400 tty6 linux
   '';
 
   providers.scheduler.backend = "anacron";
@@ -678,15 +656,13 @@ in
 
   environment.systemPackages = with pkgs; [
     wget
-    (git.override {
-      perlSupport = false;
-    })
+    gitMinimal
     iputils
     iwmenu
     iproute2
     # flameshot
     libnotify
-    wl-clipboard-rs
+    stash-clipboard
     foot
     adwaita-icon-theme
     wrappers.fuzzel
