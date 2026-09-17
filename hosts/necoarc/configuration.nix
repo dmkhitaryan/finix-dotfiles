@@ -484,5 +484,6 @@ in
     ryzenadj
     usbmuxd
     antigravity
+    protonplus
   ];
 }
