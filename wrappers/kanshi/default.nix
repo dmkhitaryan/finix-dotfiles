@@ -15,7 +15,7 @@ in
 pkgs.symlinkJoin {
   name = "kanshi-wrapped-${pkgs.kanshi.version}";
   paths = [ pkgs.kanshi ];
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
 
   postBuild = ''
     wrapProgram "$out/bin/kanshi" \

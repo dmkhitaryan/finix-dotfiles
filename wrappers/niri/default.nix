@@ -31,7 +31,7 @@ in
 pkgs.symlinkJoin {
   name = "niri-wrapped-${niri.version}";
   paths = [ niri ];
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/niri" \
       --set NIRI_CONFIG "${builtins.toString ./config.kdl}"

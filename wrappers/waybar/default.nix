@@ -90,7 +90,7 @@ in
 pkgs.symlinkJoin {
   name = "waybar-master-wrapped-${waybar-master.version}";
   paths = [ waybar-master ];
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/waybar" \
       --add-flags "--config ${config}" \

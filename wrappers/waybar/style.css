@@ -26,11 +26,11 @@
     min-height: 0;
 
     font-family:
-        "Maple Mono NF CN",
-        "0xProto Nerd Font";
+        "CozetteVector",
+        "Symbols Nerd Font";
 
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 400;
 }
 
 window#waybar {

@@ -3,12 +3,41 @@
 }:
 let
   inherit (pkgs) lib;
-  mango = pkgs.mango;
+  wlrootsNoX = pkgs.wlroots_0_20.override {
+    enableXWayland = false;
+  };
+
+  scenefxNoX = pkgs.scenefx.override {
+    wlroots_0_20 = wlrootsNoX;
+  };
+
+  mango = pkgs.mango.override {
+    enableXWayland = false;
+    wlroots_0_20 = wlrootsNoX;
+    scenefx = scenefxNoX;
+  };
+
+  mangoSession = pkgs.writeShellScript "mango-session" ''
+    ${lib.getExe' pkgs.dbus "dbus-run-session"} -- \
+      ${lib.getExe mango} \
+      -c ${builtins.toString ./config.conf}
+
+    status=$?
+
+    for _ in $(${lib.getExe' pkgs.coreutils "seq"} 20); do
+    ${lib.getExe' pkgs.util-linux "findmnt"} \
+      -rn -M "$XDG_RUNTIME_DIR/doc" >/dev/null 2>&1 || break
+
+    ${lib.getExe' pkgs.coreutils "sleep"} 0.05
+    done
+
+    exit "$status"
+  '';
 in
 pkgs.symlinkJoin {
   name = "mango-wrapped-${mango.version}";
   paths = [ mango ];
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
   postBuild = ''
     wrapProgram "$out/bin/mango" \
       --add-flags "-c ${builtins.toString ./config.conf}"
@@ -21,7 +50,7 @@ pkgs.symlinkJoin {
     Name=Mango
     DesktopNames=mango;wlroots
     Comment=mango WM
-    Exec=${lib.getExe' pkgs.dbus "dbus-run-session"} -- $out/bin/mango
+    Exec=${mangoSession}
     Icon=mango
     Type=Application
     EOF
