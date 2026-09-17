@@ -50,7 +50,7 @@ let
           owner = "Alexays";
           repo = "Waybar";
           rev = "master";
-          hash = "sha256-IBzLcGvqKHN2FXiBk6cx0VAwyeP2ssrXWqQWE+diWgc=";
+          hash = "sha256-OJBVQSIpW0Ozb3czGP3+TQyDC5BBqMQtx2asPsspFHo=";
         };
 
         mesonFlags = old.mesonFlags ++ [
