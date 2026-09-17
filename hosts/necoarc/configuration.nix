@@ -175,44 +175,44 @@ in
   };
 
   finit.services.ryzen-co = {
-  description = "Apply Ryzen Curve Optimizer";
-  path = [ pkgs.coreutils ];
+    description = "Apply Ryzen Curve Optimizer";
+    path = [ pkgs.coreutils ];
 
-  command = pkgs.writeShellScript "ryzen-co-watch" ''
-    echo 0 > /sys/devices/system/cpu/cpufreq/boost
-    last=""
+    command = pkgs.writeShellScript "ryzen-co-watch" ''
+      echo 0 > /sys/devices/system/cpu/cpufreq/boost
+      last=""
 
-    while true; do
-      profile="$(cat /sys/firmware/acpi/platform_profile)"
+      while true; do
+        profile="$(cat /sys/firmware/acpi/platform_profile)"
 
-      if [ "$profile" != "$last" ]; then
-        case "$profile" in
-          low-power)
-            temp=80
-            ;;
-          balanced)
-            temp=80
-            ;;
-          performance)
-            temp=85
-            ;;
-          *)
-            temp=80
-            ;;
-        esac
+        if [ "$profile" != "$last" ]; then
+          case "$profile" in
+            low-power)
+              temp=80
+              ;;
+            balanced)
+              temp=80
+              ;;
+            performance)
+              temp=85
+              ;;
+            *)
+              temp=80
+              ;;
+          esac
 
-        echo "Applying CO -20 and ''${temp}C limit for profile: $profile"
-        ${pkgs.ryzenadj}/bin/ryzenadj --set-coall=-20 --tctl-temp="$temp"
-        last="$profile"
-      fi
+          echo "Applying CO -20 and ''${temp}C limit for profile: $profile"
+          ${pkgs.ryzenadj}/bin/ryzenadj --set-coall=-20 --tctl-temp="$temp"
+          last="$profile"
+        fi
 
-      sleep 1
-    done
-  '';
+        sleep 1
+      done
+    '';
 
-  respawn = true;
-  log = true;
-};
+    respawn = true;
+    log = true;
+  };
 
   services = {
     chrony.enable = true;
@@ -286,7 +286,7 @@ in
     isSystemUser = true;
     group = "usbmux";
   };
-  users.groups.usbmux = {};
+  users.groups.usbmux = { };
 
   i18n = {
     defaultLocale = "en_GB.UTF-8";
@@ -303,7 +303,10 @@ in
     };
   };
   programs.modprobe.blacklist = [ "nouveau" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module config.boot.kernelPackages.ryzen-smu ];
+  boot.extraModulePackages = [
+    config.boot.kernelPackages.lenovo-legion-module
+    config.boot.kernelPackages.ryzen-smu
+  ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.initrd.supportedFilesystems.btrfs.enable = true;
   boot.initrd.supportedFilesystems.vfat.enable = true;
@@ -321,7 +324,10 @@ in
     "nvidia_uvm"
     "nvidia_drm"
   ];
-  boot.kernelModules = [ "legion_laptop" "ryzen_smu" ];
+  boot.kernelModules = [
+    "legion_laptop"
+    "ryzen_smu"
+  ];
 
   xdg.portal = {
     enable = true;
