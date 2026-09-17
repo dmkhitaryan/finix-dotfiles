@@ -69,16 +69,17 @@ let
     tests.run = dummy;
   };
 
-  dummyNixManual = prev.runCommand "nix-manual-disabled"
-  {
-    outputs = [
-      "out"
-      "man"
-    ];
-  }
-  ''
-    mkdir -p "$out" "$man"
-  '';
+  dummyNixManual =
+    prev.runCommand "nix-manual-disabled"
+      {
+        outputs = [
+          "out"
+          "man"
+        ];
+      }
+      ''
+        mkdir -p "$out" "$man"
+      '';
 
   libcameraBase = prev.libcamera.override {
     udev = prev.libudev-zero;
@@ -226,39 +227,52 @@ in
   });
 
   libei = prev.libei.override {
-    systemdLibs = prev.basu;
+    systemdLibs = final.basu;
   };
 
   kmod = prev.kmod.override {
     withDevdoc = false;
   };
 
+  basu = prev.basu.overrideAttrs (old: {
+    nativeBuildInputs = builtins.filter (x: x != prev.getent) old.nativeBuildInputs;
+
+    postPatch = (old.postPatch or [ ]) ++ [
+      ''
+        substituteInPlace meson.build \
+        --replace-fail \
+          "        getent_result = run_command('getent', 'passwd', '65534')" \
+          "        getent_result = run_command('false')"
+      ''
+    ];
+  });
+
   serd = prev.serd.overrideAttrs (old: {
-  outputs = builtins.filter (
-    output:
-    !builtins.elem output [
-      "doc"
-      "man"
-    ]
-  ) (old.outputs or [ ]);
+    outputs = builtins.filter (
+      output:
+      !builtins.elem output [
+        "doc"
+        "man"
+      ]
+    ) (old.outputs or [ ]);
 
-  postPatch = (old.postPatch or "") + ''
-    substituteInPlace meson.build \
-      --replace-fail \
-        "subdir('doc')" \
-        "# subdir('doc')"
-  '';
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace meson.build \
+        --replace-fail \
+          "subdir('doc')" \
+          "# subdir('doc')"
+    '';
 
-  nativeBuildInputs = builtins.filter (
-    p:
-    !builtins.elem (prev.lib.getName p) [
-      "doxygen"
-      "mandoc"
-      "sphinx"
-      "sphinxygen"
-    ]
-  ) (old.nativeBuildInputs or [ ]);
-});
+    nativeBuildInputs = builtins.filter (
+      p:
+      !builtins.elem (prev.lib.getName p) [
+        "doxygen"
+        "mandoc"
+        "sphinx"
+        "sphinxygen"
+      ]
+    ) (old.nativeBuildInputs or [ ]);
+  });
 
   libtiff = prev.libtiff.overrideAttrs (old: {
     nativeBuildInputs = builtins.filter (p: p != prev.sphinx) (old.nativeBuildInputs or [ ]);
@@ -297,13 +311,9 @@ in
     withValgrind = false;
   };
 
-  m1n1 = prev.m1n1.overrideAttrs {
-    doCheck = false;
-  };
-
   mako =
     (prev.mako.override {
-      systemdMinimal = prev.basu;
+      systemdMinimal = final.basu;
     }).overrideAttrs
       {
         mesonFlags = [ "-Dsd-bus-provider=basu" ];
@@ -386,7 +396,7 @@ in
 
   xdg-desktop-portal-wlr =
     (prev.xdg-desktop-portal-wlr.override {
-      systemdLibs = prev.basu;
+      systemdLibs = final.basu;
     }).overrideAttrs
       (old: {
         mesonFlags =
@@ -405,7 +415,7 @@ in
 
   rtkit =
     (prev.rtkit.override {
-      systemdLibs = prev.basu;
+      systemdLibs = final.basu;
     }).overrideAttrs
       (old: {
         mesonFlags = (old.mesonFlags or [ ]) ++ [
@@ -503,7 +513,9 @@ in
 
         patches = (old.patches or [ ]) ++ [ ../../patches/pipewire-libudev_zero.patch ];
 
-        buildInputs = builtins.filter (p: p != prev.modemmanager) (old.buildInputs or [ ]);
+        buildInputs = builtins.filter (p: p != prev.modemmanager && p != prev.elogind) (
+          old.buildInputs or [ ]
+        );
 
         nativeBuildInputs = builtins.filter (
           p:
@@ -525,6 +537,7 @@ in
             && !prev.lib.hasPrefix "-Dman=" flag
             && !prev.lib.hasPrefix "-Dlogind=" flag
             && !prev.lib.hasPrefix "-Dbluez5-backend-native-mm=" flag
+            && !prev.lib.hasPrefix "-Dlogind=" flag
           ) (old.mesonFlags or [ ]))
           ++ [
             "-Ddocs=disabled"
@@ -532,6 +545,7 @@ in
             "-Dman=disabled"
             "-Dlogind=disabled"
             "-Dbluez5-backend-native-mm=disabled"
+            "-Dlogind=disabled"
           ];
 
         outputs = builtins.filter (
@@ -602,31 +616,38 @@ in
     packageOverrides = pythonPackageOverrides;
   };
 
+  writeShellScript =
+    name: text:
+    prev.writeScript name ''
+      #!${final.bashNonInteractive}/bin/bash
+      ${text}
+    '';
+
   linux-firmware = prev.linux-firmware.overrideAttrs (old: {
-  postInstall = (old.postInstall or "") + ''
-    rm -rf \
-      $out/lib/firmware/amdgpu \
-      $out/lib/firmware/radeon \
-      $out/lib/firmware/nvidia \
-      $out/lib/firmware/i915 \
-      $out/lib/firmware/intel \
-      $out/lib/firmware/mediatek \
-      $out/lib/firmware/ath10k \
-      $out/lib/firmware/ath11k \
-      $out/lib/firmware/ath12k \
-      $out/lib/firmware/ath9k_htc \
-      $out/lib/firmware/mrvl \
-      $out/lib/firmware/rtlwifi \
-      $out/lib/firmware/rtw88 \
-      $out/lib/firmware/rtw89 \
-      $out/lib/firmware/ti-connectivity
+    postInstall = (old.postInstall or "") + ''
+      rm -rf \
+        $out/lib/firmware/amdgpu \
+        $out/lib/firmware/radeon \
+        $out/lib/firmware/nvidia \
+        $out/lib/firmware/i915 \
+        $out/lib/firmware/intel \
+        $out/lib/firmware/mediatek \
+        $out/lib/firmware/ath10k \
+        $out/lib/firmware/ath11k \
+        $out/lib/firmware/ath12k \
+        $out/lib/firmware/ath9k_htc \
+        $out/lib/firmware/mrvl \
+        $out/lib/firmware/rtlwifi \
+        $out/lib/firmware/rtw88 \
+        $out/lib/firmware/rtw89 \
+        $out/lib/firmware/ti-connectivity
 
-    rm -f $out/lib/firmware/iwlwifi-*
+      rm -f $out/lib/firmware/iwlwifi-*
 
-    # Removing firmware families can leave WHENCE-generated symlinks
-    # pointing at deleted targets.
-    find -L $out/lib/firmware -type l -delete
-    find $out/lib/firmware -type d -empty -delete
-  '';
-});
+      # Removing firmware families can leave WHENCE-generated symlinks
+      # pointing at deleted targets.
+      find -L $out/lib/firmware -type l -delete
+      find $out/lib/firmware -type d -empty -delete
+    '';
+  });
 }
