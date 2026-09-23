@@ -7,7 +7,7 @@
   ...
 }:
 let
-  xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
+  xdg-utils-perlless = pkgs.callPackage ../../packages/xdg-utils/xdg-utils-perlless.nix { };
   wrappers = import ../../wrappers {
     inherit pkgs;
     hostName = config.networking.hostName;
