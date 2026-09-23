@@ -14,7 +14,6 @@ let
     wireplumber = config.programs.wireplumber.package;
     udevPkg = pkgs.libudev-zero;
   };
-  xdg-utils-perlless = pkgs.callPackage ../../xdg-utils-perlless.nix { };
   avd-fw = pkgs.callPackage ../../packages/avd-fw { };
   libva-v4l2-request = pkgs.callPackage ../../packages/libva-v4l2-request { };
 
@@ -192,17 +191,18 @@ let
   '';
 
   termfilechooser = pkgs.xdg-desktop-portal-termfilechooser.overrideAttrs (old: {
-    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+      pkgs.makeWrapper
+    ];
 
     postInstall = (old.postInstall or "") + ''
       wrapProgram \
-        "$out/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh" \
+        "$out/share/xdg-desktop-portal-termfilechooser/nnn-wrapper.sh" \
         --prefix PATH : ${
           lib.makeBinPath [
-            pkgs.yazi
+            pkgs.nnn
             pkgs.gnused
             pkgs.coreutils
-            pkgs.findutils
           ]
         }
 
@@ -210,9 +210,9 @@ let
 
       cat > "$out/etc/xdg/xdg-desktop-portal-termfilechooser/config" <<EOF
       [filechooser]
-      cmd=$out/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
+      cmd=$out/share/xdg-desktop-portal-termfilechooser/nnn-wrapper.sh
       default_dir=\$HOME
-      env=TERMCMD=foot -T yazi-filechooser
+      env=TERMCMD=foot -T nnn-filechooser
       open_mode=suggested
       save_mode=last
       EOF
@@ -319,6 +319,8 @@ in
     environment.CURL_CA_BUNDLE = config.security.pki.caBundle;
   };
 
+  finit.services.dbus.notify = lib.mkForce "none"; # we don't use systemd at all.
+
   finit.tasks.battery-charge-limit = {
     description = "Set battery limit (to 80%)";
     runlevels = "2345";
@@ -421,6 +423,7 @@ in
     portals = [
       pkgs.xdg-desktop-portal-gtk
       xdg-desktop-portal-wlr
+      termfilechooser
     ];
   };
 
@@ -449,7 +452,6 @@ in
 
   services.dbus.packages = [
     pkgs.dconf
-    pkgs.pcmanfm
     oo7-server-fix
   ];
 
@@ -540,6 +542,7 @@ in
     org.freedesktop.impl.portal.Screenshot=wlr;
     org.freedesktop.impl.portal.ScreenCast=wlr;
     org.freedesktop.impl.portal.Secret=oo7-portal;
+    org.freedesktop.impl.portal.FileChooser=termfilechooser;
   ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
 
   environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
@@ -667,7 +670,7 @@ in
     adwaita-icon-theme
     wrappers.fuzzel
     wrappers.firefox.firefox-bin-void
-    xdg-utils-perlless
+    handlr-regex
     oo7-server-fix
     oo7-portal
     asahi-audio
@@ -693,6 +696,6 @@ in
     tack
     wrappers.kanshi
     microfetch
-    pcmanfm
+    nnn
   ];
 }
