@@ -6,7 +6,7 @@
 let
   preferencesStatus = "user";
   firefox-bin-void = pkgs.callPackage ../../packages/firefox-bin-void { };
-  xdg-utils = pkgs.callPackage ../../xdg-utils-perlless.nix { };
+  xdg-utils = pkgs.handlr-regex;
 
   wrapFirefox = pkgs.wrapFirefox.override {
     inherit xdg-utils;
