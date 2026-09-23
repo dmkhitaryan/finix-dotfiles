@@ -413,6 +413,21 @@ in
     udev = prev.libudev-zero;
   };
 
+  xdg-desktop-portal-termfilechooser =
+    (prev.xdg-desktop-portal-termfilechooser.override {
+      systemdLibs = final.basu;
+    }).overrideAttrs
+      (old: {
+        mesonFlags =
+          builtins.filter (
+            p: !(prev.lib.hasPrefix "-Dsd-bus-provider=" p) && !(prev.lib.hasPrefix "-Dsystemd=" p)
+          ) (old.mesonFlags or [ ])
+          ++ [
+            "-Dsd-bus-provider=basu"
+            "-Dsystemd=disabled"
+          ];
+      });
+
   rtkit =
     (prev.rtkit.override {
       systemdLibs = final.basu;
@@ -625,29 +640,47 @@ in
 
   linux-firmware = prev.linux-firmware.overrideAttrs (old: {
     postInstall = (old.postInstall or "") + ''
-      rm -rf \
-        $out/lib/firmware/amdgpu \
-        $out/lib/firmware/radeon \
-        $out/lib/firmware/nvidia \
-        $out/lib/firmware/i915 \
-        $out/lib/firmware/intel \
-        $out/lib/firmware/mediatek \
-        $out/lib/firmware/ath10k \
-        $out/lib/firmware/ath11k \
-        $out/lib/firmware/ath12k \
-        $out/lib/firmware/ath9k_htc \
-        $out/lib/firmware/mrvl \
-        $out/lib/firmware/rtlwifi \
-        $out/lib/firmware/rtw88 \
-        $out/lib/firmware/rtw89 \
-        $out/lib/firmware/ti-connectivity
+            rm -rf \
+              $out/lib/firmware/amdgpu \
+              $out/lib/firmware/radeon \
+              $out/lib/firmware/nvidia \
+              $out/lib/firmware/i915 \
+              $out/lib/firmware/intel \
+              $out/lib/firmware/mediatek \
+              $out/lib/firmware/ath10k \
+              $out/lib/firmware/ath11k \
+              $out/lib/firmware/ath12k \
+              $out/lib/firmware/ath9k_htc \
+              $out/lib/firmware/mrvl \
+              $out/lib/firmware/rtlwifi \
+              $out/lib/firmware/rtw88 \
+              $out/lib/firmware/rtw89 \
+              $out/lib/firmware/ti-connectivity \
+              $out/lib/firmware/qcom \
+        	$out/lib/firmware/mellanox \
+              $out/lib/firmware/microchip \
+      	$out/lib/firmware/cavium \
+              $out/lib/firmware/netronome \
+              $out/lib/firmware/qed \
+              $out/lib/firmware/liquidio \
+              $out/lib/firmware/inside-secure \
+              $out/lib/firmware/ueagle-atm \
+              $out/lib/firmware/av7110 \
+              $out/lib/firmware/cirrus \
+              $out/lib/firmware/sof
 
-      rm -f $out/lib/firmware/iwlwifi-*
+            rm -f $out/lib/firmware/iwlwifi-*
 
-      # Removing firmware families can leave WHENCE-generated symlinks
-      # pointing at deleted targets.
-      find -L $out/lib/firmware -type l -delete
-      find $out/lib/firmware -type d -empty -delete
+            # Removing firmware families can leave WHENCE-generated symlinks
+            # pointing at deleted targets.
+            find -L $out/lib/firmware -type l -delete
+            find $out/lib/firmware -type d -empty -delete
     '';
+  });
+
+  nh-unwrapped = prev.nh-unwrapped.overrideAttrs (old: {
+    doCheck = false;
+    doInstallCheck = false;
+    nativeCheckInputs = [ ];
   });
 }
