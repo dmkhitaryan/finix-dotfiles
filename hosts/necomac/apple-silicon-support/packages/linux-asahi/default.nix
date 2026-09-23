@@ -623,6 +623,45 @@ let
               SND_SOC_LPASS_RX_MACRO = no;
               SND_SOC_LPASS_TX_MACRO = no;
 
+              # Only platform this kernel targets.
+              ARCH_APPLE = yes;
+
+              ARCH_ACTIONS = no;
+              ARCH_AIROHA = no;
+              ARCH_ALPINE = no;
+              ARCH_BERLIN = no;
+              ARCH_BLAIZE = no;
+              ARCH_BST = no;
+              ARCH_CIX = no;
+              ARCH_EXYNOS = no;
+              ARCH_K3 = no;
+              ARCH_LG1K = no;
+              ARCH_KEEMBAY = no;
+              ARCH_MESON = no;
+              ARCH_MICROCHIP = no;
+              ARCH_MVEBU = no;
+              ARCH_MA35 = no;
+              ARCH_NPCM = no;
+              ARCH_REALTEK = no;
+              ARCH_RENESAS = no;
+              ARCH_ROCKCHIP = no;
+              ARCH_SEATTLE = no;
+              ARCH_INTEL_SOCFPGA = no;
+              ARCH_SOPHGO = no;
+              ARCH_STM32 = no;
+              ARCH_SYNQUACER = no;
+              ARCH_TESLA_FSD = no;
+              ARCH_SPRD = no;
+              ARCH_THUNDER = no;
+              ARCH_THUNDER2 = no;
+              ARCH_UNIPHIER = no;
+              ARCH_VEXPRESS = no;
+              ARCH_VISCONTI = no;
+              ARCH_XGENE = no;
+              ARCH_ZYNQMP = no;
+
+              IKHEADERS = no;
+
             };
             features.rust = true;
           }
