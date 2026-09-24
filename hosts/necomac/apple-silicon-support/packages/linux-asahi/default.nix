@@ -59,6 +59,7 @@ let
               # Defaults to 'y', but we want to allow the user to set options in modprobe.d
               HID_APPLE = module;
 
+              APPLE_AOP = yes;
               APPLE_PMGR_MISC = yes;
               APPLE_PMGR_PWRSTATE = yes;
 
@@ -312,7 +313,7 @@ let
 
               SND_SOC_AC97_BUS = no;
               SND_SOC_ACPI = no;
-              SND_SOC_APPLE_AOP_AUDIO = no;
+              SND_SOC_APPLE_AOP_AUDIO = module;
               SND_SOC_APPLE_MCA = module;
               SND_SOC_APPLE_MACAUDIO = module;
               SND_SOC_MIKROE_PROTO = no;
@@ -409,7 +410,7 @@ let
               SND_SOC_CS530X_SPI = no;
               SND_SOC_CX2072X = no;
               SND_SOC_DA7213 = no;
-              SND_SOC_DMIC = no;
+              SND_SOC_DMIC = module;
               SND_SOC_ES7134 = no;
               SND_SOC_ES7241 = no;
               SND_SOC_ES8311 = no;
