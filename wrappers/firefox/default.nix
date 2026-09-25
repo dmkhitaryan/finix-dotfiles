@@ -20,7 +20,7 @@ let
     # version: 150
     # url: https://github.com/yokoffing/Betterfox
 
-    # v152 FASTFOX
+    # v154 FASTFOX
     "gfx.content.skia-font-cache-size" = 20;
     "content.notify.interval" = 100000;
     "gfx.canvas.accelerated.cache-size" = 512;
@@ -107,7 +107,7 @@ let
     "browser.safebrowsing.downloads.remote.enabled" = false;
 
     # MOZILLA
-    "permissions.default.desktop-notification" = 2;
+    "permissions.default.desktop-notification" = 0;
     "permissions.default.geo" = 0;
     "geo.provider.network.url" = "https://beacondb.net/v1/geolocate";
     "browser.search.update" = false;
@@ -117,6 +117,7 @@ let
     # TELEMETRY
     "datareporting.policy.dataSubmissionEnabled" = false;
     "datareporting.healthreport.uploadEnabled" = false;
+    "browser.newtabpage.activity-stream.feeds.telemetry" = false;
     "toolkit.telemetry.unified" = false;
     "toolkit.telemetry.enabled" = false;
     "toolkit.telemetry.server" = "data:,";
@@ -136,10 +137,12 @@ let
     "app.shield.optoutstudies.enabled" = false;
     "app.normandy.enabled" = false;
     "app.normandy.api_url" = "";
+    "nimbus.rollouts.enabled" = false;
 
     # CRASH REPORTS
     "breakpad.reportURL" = "";
     "browser.tabs.crashReporting.sendReport" = false;
+    "browser.crashReports.unsubmittedCheck.enabled" = false;
 
     # SECTION: PESKYFOX
 
@@ -250,17 +253,39 @@ let
     # END: BETTERFOX
   };
 
-in
-let
+  extraPolicies = {
+    DisableFirefoxStudies = true;
+    DisableTelemetry = true;
+    DisableRemoteImprovements = true;
+    DisableFeedbackCommands = true;
+    DisableSetDesktopBackground = true;
+    SkipTermsOfUse = true;
+
+    GenerativeAI = {
+      Enabled = false;
+    };
+
+    FirefoxHome = {
+      SponsoredStories = true;
+      SponsoredTopSites = true;
+      Stories = false;
+    };
+
+    NoDefaultBookmarks = true;
+  };
+
+  extraPrefs =
+    pkgs.lib.concatStringsSep "\n" (
+      pkgs.lib.mapAttrsToList
+        (name: value:
+          "pref(${builtins.toJSON name}, ${builtins.toJSON value});")
+        preferences
+    );
+
   mkWrappedFirefox =
     firefox:
     wrapFirefox firefox {
-      extraPolicies = {
-        Preferences = builtins.mapAttrs (_: value: {
-          Value = value;
-          Status = preferencesStatus;
-        }) preferences;
-      };
+      inherit extraPrefs;
     };
 in
 {
