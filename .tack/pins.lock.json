@@ -1,0 +1,34 @@
+{
+  "finix": {
+    "type": "github",
+    "owner": "finix-community",
+    "repo": "finix",
+    "rev": "2976ba5f56ab528ff6957273266a52fc35fea9bb",
+    "narHash": "sha256-2dnbqhe3r1VzJsxKip5aiaZv74TaooVuwCVABbr1rqQ=",
+    "lastModified": 1789589024
+  },
+  "finix-community": {
+    "type": "github",
+    "owner": "finix-community",
+    "repo": "community-modules",
+    "rev": "87e22f81c1cb800be7a07705b69af18f28b7ede6",
+    "narHash": "sha256-oLiE1NEKsu83a/eV5JM3CoIkGy9kVEKkQ9Z/QlgLjC0=",
+    "lastModified": 1788308969
+  },
+  "finix-test": {
+    "type": "github",
+    "owner": "dmkhitaryan",
+    "repo": "finix",
+    "rev": "0008be5c79404d2db10f14825834673b17b1a7a5",
+    "narHash": "sha256-DoCAzWZrl+cFsa1rfJyFC8Hzb+CWkSsc6A+cGMxAjjs=",
+    "lastModified": 1788731201
+  },
+  "nixpkgs": {
+    "type": "github",
+    "owner": "NixOS",
+    "repo": "nixpkgs",
+    "rev": "b1b875982b17dabde9b4a37f3e229e74913e6db3",
+    "narHash": "sha256-zVxLZiSnmaaPLwnhj7pwmqe3axBg/C6nG5JZsJMh2g4=",
+    "lastModified": 1789546076
+  }
+}
