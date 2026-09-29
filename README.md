@@ -6,8 +6,12 @@ This is a flakeless setup, using [tack](https://https://github.com/manic-systems
 
 Hosts are generated through the top-level `fi.nix` file. Current host entries are:
 * `necoarc`: a `x86_64-linux` Lenovo Legion laptop.
-  * Runs [Niri](https://github.com/niri-wm/niri) window manager with [ashell](github.com/MalpenZibo/ashell) as status bar. 
+  * Runs [Niri](https://github.com/niri-wm/niri) window manager with [ashell](github.com/MalpenZibo/ashell) as status bar.
+  * Is essentially "stock" in terms of custimisations applied.
 * `necomac`: an `aarch64-linux` MacBook M1 Pro with Asahi kernel.
-  * Runs [mango](https://github.com/mangowm/mango) window manager with [Waybar](https://github.com/Alexays/Waybar) as status bar.
+  * Runs [mango](https://github.com/mangowm/mango) window manager with no status bar.
+  * Runs on musl over glibc, with an overlay containing musl-specific patches + (significant) compilation cutdowns.
+  * Runs on a significantly trimmed `asahi` kernel; drops compile from 1h 15min to 28min!
 
 Both are daily-drive machines and work just fine, though there is always work to be done. Configuration files can be found in their respective directories under *hosts*. Those are largely one big file with stuff like packages from *wrappers* sprinkled in.
+
