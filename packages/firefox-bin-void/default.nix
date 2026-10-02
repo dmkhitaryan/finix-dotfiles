@@ -23,23 +23,23 @@
 let
   firefoxXbps = fetchurl rec {
     pname = "firefox";
-  version = "157.0_1";
+    version = "157.0_1";
     url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
-  hash = "sha256-/h1WdVbaz4iWntKtLB3wQaZQG5DvroT0d/IAb6vyzi0=";
+    hash = "sha256-/h1WdVbaz4iWntKtLB3wQaZQG5DvroT0d/IAb6vyzi0=";
   };
 
   libffiXbps = fetchurl rec {
     pname = "libffi";
-  version = "3.3_2";
+    version = "3.3_2";
     url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
-  hash = "sha256-TjJ/vXRSO3tnn/ESz65cTgKtsqLa6fIhXbETkREBv7Q=";
+    hash = "sha256-TjJ/vXRSO3tnn/ESz65cTgKtsqLa6fIhXbETkREBv7Q=";
   };
 
   libjpegXbps = fetchurl rec {
     pname = "libjpeg-turbo";
-  version = "3.1.4.1_1";
+    version = "3.1.4.1_1";
     url = "https://repo-default.voidlinux.org/current/aarch64/${pname}-${version}.aarch64-musl.xbps";
-  hash = "sha256-S163ZgGp58lPnU2C/9Vp5hgu8MUVXJHmH/nX+jUjRuQ=";
+    hash = "sha256-S163ZgGp58lPnU2C/9Vp5hgu8MUVXJHmH/nX+jUjRuQ=";
   };
 
   nsprFixed = nspr.overrideAttrs (old: {

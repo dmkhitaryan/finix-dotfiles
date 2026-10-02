@@ -248,28 +248,30 @@ in
   };
 
   nixVersions = prev.nixVersions // {
-    git = prev.nixVersions.git.overrideScope (final: old: {
-      nix-util-tests = dummyTests;
-      nix-store-tests = dummyTests;
-      nix-expr-tests = dummyTests;
-      nix-fetchers-tests = dummyTests;
-      nix-flake-tests = dummyTests;
-      nix-functional-tests = null;
-      nix-manual = dummyNixManual;
+    git = prev.nixVersions.git.overrideScope (
+      final: old: {
+        nix-util-tests = dummyTests;
+        nix-store-tests = dummyTests;
+        nix-expr-tests = dummyTests;
+        nix-fetchers-tests = dummyTests;
+        nix-flake-tests = dummyTests;
+        nix-functional-tests = null;
+        nix-manual = dummyNixManual;
 
-      nix-store = old.nix-store.override {
-        withAWS = false;
-      };
+        nix-store = old.nix-store.override {
+          withAWS = false;
+        };
 
-      nix-util = old.nix-util.overrideAttrs (oldAttrs: {
-        postPatch = (oldAttrs.postPatch or "") + ''
-          substituteInPlace unix/file-descriptor.cc \
-            --replace-fail \
-              '#include <fcntl.h>' \
-              $'#include <fcntl.h>\n#include <sys/syscall.h>'
-        '';
-      });
-    });
+        nix-util = old.nix-util.overrideAttrs (oldAttrs: {
+          postPatch = (oldAttrs.postPatch or "") + ''
+            substituteInPlace unix/file-descriptor.cc \
+              --replace-fail \
+                '#include <fcntl.h>' \
+                $'#include <fcntl.h>\n#include <sys/syscall.h>'
+          '';
+        });
+      }
+    );
   };
 
   onetbb = prev.onetbb.overrideAttrs (old: {
@@ -437,16 +439,16 @@ in
   };
 
   gitMinimal = prev.gitMinimal.overrideAttrs (old: {
-  doInstallCheck = false;
+    doInstallCheck = false;
 
-  postPatch =
-    (old.postPatch or "")
-    + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
-      substituteInPlace git-sh-i18n.sh \
-        --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
-        --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
-    '';
-});
+    postPatch =
+      (old.postPatch or "")
+      + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
+        substituteInPlace git-sh-i18n.sh \
+          --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
+          --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
+      '';
+  });
 
   polkit =
     (prev.polkit.override {
