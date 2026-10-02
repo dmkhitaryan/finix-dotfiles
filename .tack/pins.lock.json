@@ -3,9 +3,9 @@
     "type": "github",
     "owner": "finix-community",
     "repo": "finix",
-    "rev": "37c6c49aac1ba686fc7b4def599e6a0a7e3ef0bc",
-    "narHash": "sha256-0Js5CxesLCEriPZaNBGW84Cz0BODBVR7ZKlEqZZ5ayE=",
-    "lastModified": 1790589569
+    "rev": "2132943bd7c13cc6575cc344ffb394179529f8cd",
+    "narHash": "sha256-p4+EZd+IMP+Ttn7kkA000VT0slahR+pidG8fLEQwKwc=",
+    "lastModified": 1790805062
   },
   "finix-community": {
     "type": "github",
@@ -27,8 +27,8 @@
     "type": "github",
     "owner": "NixOS",
     "repo": "nixpkgs",
-    "rev": "7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f",
-    "narHash": "sha256-ZoxIApko70jCdbH3l20HWXOBaT2HZd87orzd2yJ9dVE=",
-    "lastModified": 1790578696
+    "rev": "b4fd65b198c599cbe814fcb9f42d25d021595ec9",
+    "narHash": "sha256-ilerN1WLSvF+HMjziC/Wv99J5y02maDH+6hZPwsORKg=",
+    "lastModified": 1790689126
   }
 }
