@@ -205,7 +205,7 @@ let
           lib.makeBinPath [
             pkgs.nnn
             pkgs.gnused
-            pkgs.coreutils
+            pkgs.busybox
           ]
         }
 
@@ -361,7 +361,7 @@ in
 
   services.nix-daemon = {
     enable = true;
-    package = pkgs.nixVersions.latest;
+    package = pkgs.nixVersions.git;
     settings = {
       allow-import-from-derivation = false;
       auto-optimise-store = true;
@@ -445,6 +445,8 @@ in
   };
 
   programs = {
+    coreutils.package = pkgs.busybox;
+
     limine = {
       enable = true;
       settings.editor_enabled = true; # Disable on systems that need security
@@ -731,7 +733,7 @@ in
     lspPluginsLv2
     swaybg
     dconf
-    nh
+    nh-unwrapped
     playerctl
     tree
     btop

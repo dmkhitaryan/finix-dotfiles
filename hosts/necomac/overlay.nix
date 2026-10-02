@@ -11,6 +11,10 @@ let
       prev.lib.filter (ext: (ext.extensionName or null) != "gettext") enabled;
   };
 
+  orc = prev.orc.override {
+    buildDevDoc = false;
+  };
+
   gstAll1Scoped = prev.gst_all_1.overrideScope (
     _: gstPrev: {
       gstreamer = gstPrev.gstreamer.override {
@@ -32,6 +36,7 @@ let
 
     gst-plugins-base = gstAll1Scoped.gst-plugins-base.override {
       enableDocumentation = false;
+      orc = final.orc;
     };
   };
 
@@ -243,7 +248,7 @@ in
   };
 
   nixVersions = prev.nixVersions // {
-    latest = prev.nixVersions.latest.override {
+    git = prev.nixVersions.git.overrideScope (final: old: {
       nix-util-tests = dummyTests;
       nix-store-tests = dummyTests;
       nix-expr-tests = dummyTests;
@@ -252,10 +257,19 @@ in
       nix-functional-tests = null;
       nix-manual = dummyNixManual;
 
-      nix-store = prev.nixVersions.latest.libs.nix-store.override {
+      nix-store = old.nix-store.override {
         withAWS = false;
       };
-    };
+
+      nix-util = old.nix-util.overrideAttrs (oldAttrs: {
+        postPatch = (oldAttrs.postPatch or "") + ''
+          substituteInPlace unix/file-descriptor.cc \
+            --replace-fail \
+              '#include <fcntl.h>' \
+              $'#include <fcntl.h>\n#include <sys/syscall.h>'
+        '';
+      });
+    });
   };
 
   onetbb = prev.onetbb.overrideAttrs (old: {
@@ -421,6 +435,18 @@ in
   at-spi2-core = prev.at-spi2-core.override {
     systemdSupport = false;
   };
+
+  gitMinimal = prev.gitMinimal.overrideAttrs (old: {
+  doInstallCheck = false;
+
+  postPatch =
+    (old.postPatch or "")
+    + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
+      substituteInPlace git-sh-i18n.sh \
+        --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
+        --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
+    '';
+});
 
   polkit =
     (prev.polkit.override {
@@ -768,5 +794,9 @@ in
     doCheck = false;
     doInstallCheck = false;
     nativeCheckInputs = [ ];
+  });
+
+  handlr-regex = prev.handlr-regex.overrideAttrs (old: {
+    doCheck = false;
   });
 }
