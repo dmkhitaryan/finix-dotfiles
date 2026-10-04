@@ -367,6 +367,22 @@ in
     withValgrind = false;
   };
 
+  oo7-server = prev.oo7-server.overrideAttrs (old: {
+    env = (old.env or { }) // {
+      CARGO_PROFILE_RELEASE_OPT_LEVEL = "z";
+      CARGO_PROFILE_RELEASE_LTO = "thin";
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1";
+    };
+  });
+
+  oo7-portal = prev.oo7-portal.overrideAttrs (old: {
+    env = (old.env or { }) // {
+      CARGO_PROFILE_RELEASE_OPT_LEVEL = "z";
+      CARGO_PROFILE_RELEASE_LTO = "thin";
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1";
+    };
+  });
+
   mako =
     (prev.mako.override {
       systemdMinimal = final.basu;
