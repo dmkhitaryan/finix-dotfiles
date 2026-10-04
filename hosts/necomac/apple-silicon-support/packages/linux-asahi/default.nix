@@ -64,6 +64,7 @@ let
               APPLE_AOP = yes;
               APPLE_PMGR_MISC = yes;
               APPLE_PMGR_PWRSTATE = yes;
+              DRM_ASAHI = yes;
 
               NVME_HOST_AUTH = lib.mkForce no;
 
@@ -75,14 +76,43 @@ let
               WLAN_VENDOR_ATH = no;
               WLAN_VENDOR_INTEL = no;
               WLAN_VENDOR_MEDIATEK = no;
+              WLAN_VENDOR_ADMTEK = no;
+              WLAN_VENDOR_ATMEL = no;
+              # Keep WLAN_VENDOR_BROADCOM.
+              WLAN_VENDOR_BROADCOM = yes;
+              WLAN_VENDOR_INTERSIL = no;
+              WLAN_VENDOR_MARVELL = no;
+              WLAN_VENDOR_MICROCHIP = no;
+              WLAN_VENDOR_PURELIFI = no;
+              WLAN_VENDOR_RALINK = no;
+              WLAN_VENDOR_REALTEK = no;
+              WLAN_VENDOR_RSI = no;
+              WLAN_VENDOR_SILABS = no;
+              WLAN_VENDOR_ST = no;
+              WLAN_VENDOR_TI = no;
+              WLAN_VENDOR_ZYDAS = no;
+              WLAN_VENDOR_QUANTENNA = no;
 
               NET_VENDOR_AMD = no;
               NET_VENDOR_INTEL = no;
               NET_VENDOR_NVIDIA = no;
 
+              # Networking hardware/features not present on the J314.
+              NET_DSA = no;
+              WWAN = no;
+              INFINIBAND = lib.mkForce no;
+
               # Unused virtualization.
               XEN = lib.mkForce no;
               HYPERV = lib.mkForce no;
+
+              # Virtual/test GPUs.
+              DRM_VGEM = no;
+              DRM_VKMS = no;
+              DRM_VIRTIO_GPU = no;
+
+              # Less "consequence-free" clear.
+              DEBUG_MEMORY_INIT = no;
 
               # Wrong Broadcom Wi-Fi implementations.
               B43 = no;
@@ -93,6 +123,9 @@ let
               FSL_MC_BUS = no;
               WAN = lib.mkForce no;
               SPEAKUP = no;
+
+              # Ancient Apple USB touchpads, not the J314 trackpad.
+              MOUSE_APPLETOUCH = no;
 
               # Legacy framebuffer hardware.
               FB_NVIDIA = no;
