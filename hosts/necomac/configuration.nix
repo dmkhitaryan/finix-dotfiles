@@ -101,6 +101,18 @@ let
     '';
   });
 
+  fixAppleDrm = pkgs.writeScriptBin "fix-apple-drm" ''
+    #!${pkgs.busybox}/bin/ash
+    ${pkgs.busybox}/bin/chown root:video /dev/dri/card2
+    ${pkgs.busybox}/bin/chmod 660 /dev/dri/card2
+  '';
+
+  mangoAutologin = pkgs.writeScriptBin "mango-autologin" ''
+    #!${pkgs.busybox}/bin/ash
+    ${config.providers.privileges.command} -n ${lib.getExe fixAppleDrm}
+    exec ${wrappers.mango.session}
+  '';
+
   # Despite the module override to use libudev-zero, pipewire's build picked
   # systemd udev; this broke hotplugging event on mdevd, even with nlgroups=4.
   pipewireFixed =
@@ -118,6 +130,12 @@ let
           "${finix}/modules/programs/pipewire/pipewire.patch"
         ];
       });
+
+  start-webcamera = pkgs.writeScriptBin "start-webcamera" ''
+    #!${pkgs.busybox}/bin/ash
+    exec ${config.providers.privileges.command} -n \
+      ${lib.getExe' pkgs.kmod "modprobe"} apple_isp
+  '';
 
   start-pipewire = pkgs.writeScriptBin "start-pipewire" ''
     #!${pkgs.busybox}/bin/ash
@@ -354,6 +372,11 @@ in
     '';
   };
 
+  finit.tasks.bluetooth-late = {
+    conditions = [ "!service/greetd/ready" ];
+    command = "${lib.getExe' pkgs.kmod "modprobe"} hci_bcm4377";
+  };
+
   i18n = {
     defaultLocale = "C.UTF-8";
     glibcLocales = null;
@@ -433,6 +456,9 @@ in
       patch = ../../patches/apple-use-pmp.patch;
     }
   ];
+  boot.initrd.kernelModules = [
+    "mux_apple_display_crossbar"
+  ];
 
   xdg.portal = {
     enable = true;
@@ -482,8 +508,12 @@ in
     wireplumber.enable = true;
     #wireplumber.package = pkgs.wireplumber;
     doas.enable = true;
-    nano.enable = true;
-    nano.defaultEditor = true;
+    modprobe.blacklist = [
+      "apple_isp"
+      "sm4_ce"
+      "sm4_ce_gcm"
+      "hci_bcm4377"
+    ];
     bash.enable = true;
   };
 
@@ -510,7 +540,7 @@ in
 
   services = {
     #bootchart.enable = true;
-    #bootchart.stop.conditions = [ "service/ly/ready" ];
+    #bootchart.stop.conditions = [ "service/greetd/ready" ];
     openssh.enable = true;
     polkit.enable = true;
     polkit.package = lib.mkForce pkgs.polkit;
@@ -520,6 +550,10 @@ in
     getty.enable = true;
     mdevd.enable = true;
     mdevd.nlgroups = 4;
+    #greetd.settings.initial_session = {
+    #  user = "jagerroni";
+    #  command = lib.getExe mangoAutologin;
+    #};
     keventd.enable = false;
     dhcpcd.enable = true;
     iwd.enable = true;
@@ -530,11 +564,22 @@ in
     rtkit.extraGroups = [ config.services.seatd.group ];
     bluetooth.enable = true;
     mdevd.hotplugRules = lib.mkMerge [
+      # Run ahead of 'generic MODALIAS' (order 250).
+      (lib.mkOrder 249 ''
+        $MODALIAS=of:.*pmgr-pwrstate.* 0:0 660
+        $MODALIAS=of:.*t6000-dart.* 0:0 660
+      '')
+
       (lib.mkAfter ''
         SUBSYSTEM=input;.* root:input 660
         SUBSYSTEM=sound;.* root:audio 660
         SUBSYSTEM=media;.* root:video 660
       '')
+
+      # Force Apple DRM mode to actually be ready before greetd (auto)login.
+      ''
+        card[0-9] root:video 660 =dri/
+      ''
     ];
   };
 
@@ -571,6 +616,7 @@ in
       conditions = "usr/audio";
     };
   };
+
   environment.pathsToLink = [
     "/share/wireplumber"
     "/share/icons"
@@ -620,6 +666,19 @@ in
     }
     {
       users = [ "jagerroni" ];
+      runAs = "root";
+      requirePassword = false;
+      command = lib.getExe' pkgs.kmod "modprobe";
+      args = [ "apple_isp" ];
+    }
+    {
+      users = [ "jagerroni" ];
+      runAs = "root";
+      command = lib.getExe fixAppleDrm;
+      requirePassword = false;
+    }
+    {
+      users = [ "jagerroni" ];
       groups = [ ];
       runAs = "root";
       requirePassword = false;
@@ -652,6 +711,7 @@ in
   security.pam.environment.NH_FILE.default = "/home/jagerroni/dotfiles/fi.nix";
   security.pam.environment.NH_ATTRP.default = "finixConfigurations.necomac";
   security.pam.environment.NIX_PATH.default = "nixpkgs=flake:nixpkgs";
+  security.pam.environment.NH_NOM.default = "no";
 
   security.pam.services.greetd.text = lib.mkForce ''
     # Account management.
@@ -744,8 +804,10 @@ in
     wrappers.mango
     send-volume-notif
     send-brightness-notif
+    start-webcamera
     tack
     microfetch
     nnn
+    micro
   ];
 }
