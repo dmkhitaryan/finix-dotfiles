@@ -60,25 +60,17 @@ in
         [
           (./hosts/necomac/configuration.nix)
           nix-daemon
-          nano
           brightnessctl
           openssh
           sysklogd
           limine
-          sudo
           polkit
           getty
           bash
           dhcpcd
           iwd
-          niri
-          gvfs
           tuigreet
           rtkit
-          gnome-keyring
-          xwayland-satellite
-          power-profiles-daemon
-          upower
           pipewire
           wireplumber
           bluetooth
@@ -86,7 +78,7 @@ in
           anacron
         ]
         ++ (with sources.finix-community.nixosModules; [
-          fastfetch
+          bootchart
         ]);
       specialArgs = {
         finix = sources.finix;
