@@ -81,7 +81,7 @@ in
           bootchart
         ])
         ++ (with sources.finix-test.nixosModules; [
-        	bash
+          bash
         ]);
       specialArgs = {
         finix = sources.finix;

@@ -350,10 +350,10 @@ in
   finit.path = lib.mkForce [
     config.programs.coreutils.package
     config.finit.package
-  
+
     # required by finit on shutdown
     pkgs.util-linux.mount
-  
+
     # for finit log rotation
     pkgs.gzip
   ];
@@ -778,15 +778,16 @@ in
     fi
   '';
 
-  system.activation.path = lib.mkForce (map lib.getBin [
-        config.programs.coreutils.package
-        pkgs.getent
-        pkgs.stdenv.cc.libc # nscd in update-users-groups.pl
-        pkgs.shadow
-        pkgs.nettools # needed for hostname
-        pkgs.util-linux # needed for mount and mountpoint
-      ]);
-  
+  system.activation.path = lib.mkForce (
+    map lib.getBin [
+      config.programs.coreutils.package
+      pkgs.getent
+      pkgs.stdenv.cc.libc # nscd in update-users-groups.pl
+      pkgs.shadow
+      pkgs.nettools # needed for hostname
+      pkgs.util-linux # needed for mount and mountpoint
+    ]
+  );
 
   environment.systemPackages = with pkgs; [
     wget

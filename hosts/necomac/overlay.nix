@@ -199,24 +199,24 @@ in
   };
 
   iwd = prev.iwd.override {
-  	coreutils = prev.busybox;
+    coreutils = prev.busybox;
   };
 
   alsa-ucm-conf = prev.alsa-ucm-conf.override {
-  	coreutils = prev.busybox;
+    coreutils = prev.busybox;
   };
 
-  alsa-ucm-conf-asahi = prev.alsa-ucm-conf-asahi.override { 
-	alsa-ucm-conf = final.alsa-ucm-conf;
+  alsa-ucm-conf-asahi = prev.alsa-ucm-conf-asahi.override {
+    alsa-ucm-conf = final.alsa-ucm-conf;
   };
 
   alsa-lib = prev.alsa-lib.override {
-  	alsa-ucm-conf = final.alsa-ucm-conf;
+    alsa-ucm-conf = final.alsa-ucm-conf;
   };
 
-  libjpeg_turbo = prev.libjpeg_turbo.override { 
+  libjpeg_turbo = prev.libjpeg_turbo.override {
     enableJpeg8 = true; # Potentially breaking. YOLO.
-   };
+  };
 
   lsp-plugins =
     (prev.lsp-plugins.override {
