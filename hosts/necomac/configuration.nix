@@ -17,6 +17,7 @@ let
   avd-fw = pkgs.callPackage ../../packages/avd-fw { };
   libva-v4l2-request = pkgs.callPackage ../../packages/libva-v4l2-request { };
   endcord = pkgs.callPackage ../../packages/endcord { };
+  makoCustom = pkgs.callPackage ../../packages/mako { };
 
   xdg-open = pkgs.writeScriptBin "xdg-open" ''
     #!${pkgs.busybox}/bin/ash
@@ -222,7 +223,6 @@ let
         --prefix PATH : ${
           lib.makeBinPath [
             pkgs.nnn
-            pkgs.gnused
             pkgs.busybox
           ]
         }
@@ -334,17 +334,29 @@ in
     ./hardware-configuration.nix
     ./apple-silicon-support
     ../../modules/security/wrappers
+    ../../modules/environment/path
     #./sddm.nix
   ];
 
   disabledModules = [
     "${sources.finix}/modules/security/wrappers"
+    "${sources.finix}/modules/environment/path"
   ];
 
   # In flake setups, vendor directory must be set explicitly.
   hardware.asahi.enable = true;
   hardware.asahi.peripheralFirmwareDirectory = /boot/vendorfw;
 
+  finit.path = lib.mkForce [
+    config.programs.coreutils.package
+    config.finit.package
+  
+    # required by finit on shutdown
+    pkgs.util-linux.mount
+  
+    # for finit log rotation
+    pkgs.gzip
+  ];
   finit.runlevel = 3;
   finit.cgroups.system.settings = {
     "cpu.weight" = 100;
@@ -384,7 +396,7 @@ in
 
   services.nix-daemon = {
     enable = true;
-    package = pkgs.nixVersions.git;
+    package = pkgs.nixVersions.latest;
     settings = {
       allow-import-from-derivation = false;
       auto-optimise-store = true;
@@ -550,10 +562,10 @@ in
     getty.enable = true;
     mdevd.enable = true;
     mdevd.nlgroups = 4;
-    #greetd.settings.initial_session = {
-    #  user = "jagerroni";
-    #  command = lib.getExe mangoAutologin;
-    #};
+    greetd.settings.initial_session = {
+      user = "jagerroni";
+      command = lib.getExe mangoAutologin;
+    };
     keventd.enable = false;
     dhcpcd.enable = true;
     iwd.enable = true;
@@ -766,6 +778,16 @@ in
     fi
   '';
 
+  system.activation.path = lib.mkForce (map lib.getBin [
+        config.programs.coreutils.package
+        pkgs.getent
+        pkgs.stdenv.cc.libc # nscd in update-users-groups.pl
+        pkgs.shadow
+        pkgs.nettools # needed for hostname
+        pkgs.util-linux # needed for mount and mountpoint
+      ]);
+  
+
   environment.systemPackages = with pkgs; [
     wget
     imv
@@ -800,7 +822,7 @@ in
     libarchive
     grim
     slurp
-    mako
+    makoCustom
     wrappers.mango
     send-volume-notif
     send-brightness-notif

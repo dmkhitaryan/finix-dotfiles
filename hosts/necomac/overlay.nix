@@ -194,6 +194,30 @@ in
     withRdma = false;
   };
 
+  nnn = prev.nnn.override {
+    gnused = prev.busybox;
+  };
+
+  iwd = prev.iwd.override {
+  	coreutils = prev.busybox;
+  };
+
+  alsa-ucm-conf = prev.alsa-ucm-conf.override {
+  	coreutils = prev.busybox;
+  };
+
+  alsa-ucm-conf-asahi = prev.alsa-ucm-conf-asahi.override { 
+	alsa-ucm-conf = final.alsa-ucm-conf;
+  };
+
+  alsa-lib = prev.alsa-lib.override {
+  	alsa-ucm-conf = final.alsa-ucm-conf;
+  };
+
+  libjpeg_turbo = prev.libjpeg_turbo.override { 
+    enableJpeg8 = true; # Potentially breaking. YOLO.
+   };
+
   lsp-plugins =
     (prev.lsp-plugins.override {
       php84 = php84ForLsp;
@@ -248,7 +272,7 @@ in
   };
 
   nixVersions = prev.nixVersions // {
-    git = prev.nixVersions.git.overrideScope (
+    latest = prev.nixVersions.latest.overrideScope (
       final: old: {
         nix-util-tests = dummyTests;
         nix-store-tests = dummyTests;
@@ -454,17 +478,35 @@ in
     systemdSupport = false;
   };
 
-  gitMinimal = prev.gitMinimal.overrideAttrs (old: {
-    doInstallCheck = false;
+  git = prev.git.override {
+    coreutils = prev.busybox;
+    curl = prev.curlMinimal;
+    gnugrep = prev.busybox;
+    gnused = prev.busybox;
+    gawk = prev.busybox;
+  };
 
-    postPatch =
-      (old.postPatch or "")
-      + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
-        substituteInPlace git-sh-i18n.sh \
-          --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
-          --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
-      '';
-  });
+  gitMinimal =
+    (final.git.override {
+      withManual = false;
+      osxkeychainSupport = false;
+      pythonSupport = false;
+      perlSupport = false;
+      rustSupport = false;
+      withpcre2 = false;
+      curl = if prev.stdenv.hostPlatform.isFreeBSD then prev.curlMinimal else prev.curl;
+    }).overrideAttrs
+      (old: {
+        doInstallCheck = false;
+
+        postPatch =
+          (old.postPatch or "")
+          + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
+            substituteInPlace git-sh-i18n.sh \
+              --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
+              --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
+          '';
+      });
 
   polkit =
     (prev.polkit.override {
