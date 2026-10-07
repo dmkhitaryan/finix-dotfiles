@@ -66,7 +66,7 @@ in
           limine
           polkit
           getty
-          bash
+          # bash
           dhcpcd
           iwd
           tuigreet
@@ -79,6 +79,9 @@ in
         ]
         ++ (with sources.finix-community.nixosModules; [
           bootchart
+        ])
+        ++ (with sources.finix-test.nixosModules; [
+        	bash
         ]);
       specialArgs = {
         finix = sources.finix;

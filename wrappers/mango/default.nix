@@ -18,31 +18,31 @@ let
   };
 
   mangoSession = pkgs.writeShellScript "mango-session" ''
-      ${lib.getExe' pkgs.util-linux "setsid"} \
-        ${lib.getExe' pkgs.dbus "dbus-run-session"} -- \
-          ${lib.getExe mango} \
-          -c ${builtins.toString ./config.conf} &
+    ${lib.getExe' pkgs.util-linux "setsid"} \
+      ${lib.getExe' pkgs.dbus "dbus-run-session"} -- \
+        ${lib.getExe mango} \
+        -c ${builtins.toString ./config.conf} &
 
-      session=$!
+    session=$!
 
-      wait "$session"
-      status=$?
+    wait "$session"
+    status=$?
 
-      # Graceful shutdown of everything belonging to this desktop session.
-      kill -TERM -- "-$session" 2>/dev/null || true
-      ${lib.getExe' pkgs.busybox "sleep"} 0.2
+    # Graceful shutdown of everything belonging to this desktop session.
+    kill -TERM -- "-$session" 2>/dev/null || true
+    ${lib.getExe' pkgs.busybox "sleep"} 0.2
 
-      # Catch anything that ignored SIGTERM.
-      kill -KILL -- "-$session" 2>/dev/null || true
+    # Catch anything that ignored SIGTERM.
+    kill -KILL -- "-$session" 2>/dev/null || true
 
-      for _ in $(${lib.getExe' pkgs.busybox "seq"} 20); do
-        ${lib.getExe' pkgs.util-linux "findmnt"} \
-          -rn -M "$XDG_RUNTIME_DIR/doc" >/dev/null 2>&1 || break
+    for _ in $(${lib.getExe' pkgs.busybox "seq"} 20); do
+      ${lib.getExe' pkgs.util-linux "findmnt"} \
+        -rn -M "$XDG_RUNTIME_DIR/doc" >/dev/null 2>&1 || break
 
-        ${lib.getExe' pkgs.busybox "sleep"} 0.05
-      done
+      ${lib.getExe' pkgs.busybox "sleep"} 0.05
+    done
 
-      exit "$status"
+    exit "$status"
   '';
 in
 pkgs.symlinkJoin {
