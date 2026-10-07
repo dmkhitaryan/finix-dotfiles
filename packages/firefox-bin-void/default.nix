@@ -122,13 +122,6 @@ stdenv.mkDerivation rec {
       "$TMPDIR/libffi/usr/lib/libffi.so.7"* \
       "$out/lib/void-compat/"
 
-    mkdir "$TMPDIR/libjpeg"
-    bsdtar -xf ${libjpegXbps} -C "$TMPDIR/libjpeg"
-
-    cp -a \
-      "$TMPDIR/libjpeg/usr/lib/libjpeg.so.8"* \
-      "$out/lib/void-compat/"
-
     runHook postInstall
   '';
 
@@ -164,7 +157,6 @@ stdenv.mkDerivation rec {
       gtk3
       firefoxXbps
       libffiXbps
-      libjpegXbps
       ;
 
     applicationName = "Firefox";
