@@ -32,7 +32,10 @@ url = "github:NixOS/nixpkgs/nixos-unstable"
 url = "github:finix-community/finix/main"
 
 [inputs.finix-test]
-url = "github:dmkhitaryan/finix/default-user-shell-changes"
+url = "github:dmkhitaryan/finix/coreutils-in-bashrc"
 
 [inputs.finix-community]
 url = "github:finix-community/community-modules"
+
+[inputs.nh]
+url = "github:nix-community/nh"
