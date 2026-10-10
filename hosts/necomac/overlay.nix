@@ -231,6 +231,27 @@ in
     enableJpeg8 = true; # Potentially breaking. YOLO.
   };
 
+  alejandra = prev.alejandra.overrideAttrs (old: {
+    env = (old.env or { }) // {
+      #CARGO_PROFILE_RELEASE_OPT_LEVEL = "s";
+      CARGO_PROFILE_RELEASE_LTO = "fat";
+    };
+  });
+
+  nil =
+    (prev.nil.override {
+      nix = final.nixVersions.latest;
+    }).overrideAttrs
+      (old: {
+        env = old.env // {
+          #CARGO_PROFILE_RELEASE_OPT_LEVEL = "s";
+          CARGO_PROFILE_RELEASE_LTO = "fat";
+          CFG_DEFAULT_FORMATTER = prev.lib.getExe final.alejandra;
+        };
+        doCheck = false;
+        doInstallCheck = false;
+      });
+
   lsp-plugins =
     (prev.lsp-plugins.override {
       php84 = php84ForLsp;
