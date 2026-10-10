@@ -790,6 +790,8 @@ in
   );
 
   environment.systemPackages = with pkgs; [
+    nil
+    alejandra
     wget
     imv
     xdg-open
