@@ -3,9 +3,9 @@
     "type": "github",
     "owner": "finix-community",
     "repo": "finix",
-    "rev": "70b73014b720c2a4c4150a590a33aef0a054fc18",
-    "narHash": "sha256-GDOPW8FkOXcWoGUPpgUhzfyk5B64CzjwF3tpUakht1I=",
-    "lastModified": 1791323357
+    "rev": "9fafdc3f091e963585a0dd4df028d58c2d66d815",
+    "narHash": "sha256-ftxhTlFuBHQcXhztoiVQSkQ1aW3j28sZNSosINkZBXk=",
+    "lastModified": 1791396781
   },
   "finix-community": {
     "type": "github",
@@ -27,16 +27,16 @@
     "type": "github",
     "owner": "nix-community",
     "repo": "nh",
-    "rev": "25da175ed91650523ac7a8b7aa38aedb736546bc",
-    "narHash": "sha256-PVnIyRpdHtGnc/m918Xs/pIlILzRekqywlU7qecS5ug=",
-    "lastModified": 1790766414
+    "rev": "d9192c1521a067eeaa5669964fb8ae7816d4787c",
+    "narHash": "sha256-TR8TU/84v1+AX9+zTnaTbpPxsuPGsIpl3fymPkpACM8=",
+    "lastModified": 1791542982
   },
   "nixpkgs": {
     "type": "github",
     "owner": "NixOS",
     "repo": "nixpkgs",
-    "rev": "151fa4e8ddfdd8dd25d945ad94ed54a13de9f6e4",
-    "narHash": "sha256-Miqqk/ammqnTUxaoCyvtwoPeLbI1ksFyLxi/CazZpWY=",
-    "lastModified": 1791260994
+    "rev": "e7439b6b14ad3cc35d05608ebca9bce01a25f5f8",
+    "narHash": "sha256-H83yz/do+hjOO0uujHyH8RgtIQP2v7Mw+cLwcZK/xKc=",
+    "lastModified": 1791456040
   }
 }

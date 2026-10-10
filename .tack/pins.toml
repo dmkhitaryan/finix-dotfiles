@@ -39,3 +39,4 @@ url = "github:finix-community/community-modules"
 
 [inputs.nh]
 url = "github:nix-community/nh"
+follows = { nixpkgs = "nixpkgs" }
