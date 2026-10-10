@@ -1,6 +1,11 @@
 final: prev:
 let
-  wildStdenv = prev.useWildLinker prev.stdenv;
+  wildStdenv =
+    let
+      p = prev.stdenv;
+      ok = plat: plat.isLinux && plat.isElf;
+    in
+    if ok p.buildPlatform && ok p.hostPlatform && ok p.targetPlatform then prev.useWildLinker p else p;
 
   php84ForLsp = prev.php84.buildEnv {
     systemdSupport = false;
@@ -94,8 +99,15 @@ let
       }
     );
 
-  llvm21 = trimLlvm prev.llvmPackages_21;
-  llvm22 = trimLlvm prev.llvmPackages_22;
+  trimLlvmOverridable =
+    llvmPkgs:
+    (trimLlvm llvmPkgs)
+    // {
+      override = args: trimLlvmOverridable (llvmPkgs.override args);
+    };
+
+  llvm21 = trimLlvmOverridable prev.llvmPackages_21;
+  llvm22 = trimLlvmOverridable prev.llvmPackages_22;
 
   dummy = prev.runCommand "dummy-nix-tests-run" { } "mkdir -p $out";
   dummyTests = dummy // {
@@ -123,6 +135,7 @@ let
     (pkg.override {
       gst_all_1 = final.gst_all_1;
       withSystemd = false;
+      gtkSupport = false;
     }).overrideAttrs
       (old: {
         postConfigure = (old.postConfigure or "") + ''
@@ -478,6 +491,20 @@ in
     systemdSupport = false;
   };
 
+  libepoxy = prev.libepoxy.overrideAttrs (old: {
+    buildInputs = (old.buildInputs or [ ]) ++ [ prev.libGL ];
+    mesonFlags = builtins.filter (p: !(prev.lib.hasPrefix "-Degl=" p)) (old.mesonFlags or [ ]) ++ [
+      "-Degl=yes"
+    ];
+  });
+
+  gtk3 = prev.gtk3.override {
+    x11Support = false;
+    xineramaSupport = false;
+    libepoxy = final.libepoxy;
+    gettext = null;
+  };
+
   git = prev.git.override {
     coreutils = prev.busybox;
     curl = prev.curlMinimal;
@@ -620,15 +647,49 @@ in
         ];
       });
 
-  firefox-unwrapped = prev.firefox-unwrapped.overrideAttrs (old: {
-    configureFlags =
-      builtins.filter (flag: !(prev.lib.hasPrefix "--with-onnx-runtime=" flag)) (
-        old.configureFlags or [ ]
-      )
-      ++ [
-        "--without-onnx-runtime"
-      ];
-  });
+  firefox-unwrapped =
+    (prev.firefox-unwrapped.override {
+      pkgsCross = prev.pkgsCross // {
+        # glibc, no overlays.
+        wasm32-wasip1 = (import prev.path { localSystem = "aarch64-linux"; }).pkgsCross.wasm32-wasip1;
+      };
+      enablePGO = false;
+      enableDebugSymbols = false;
+      enableLTO = false;
+    }).overrideAttrs
+      (old: {
+        patches = (old.patches or [ ]) ++ [
+          (prev.fetchpatch {
+            name = "audio-thread-priority-musl-pthread_t.patch";
+            url = "https://github.com/padenot/audio_thread_priority/commit/9c37971cf57f9b6bab44a247ebc7f610cf8186bd.patch";
+            stripLen = 1;
+            extraPrefix = "third_party/rust/audio_thread_priority/";
+            excludes = [ ".github/*" ];
+            hash = "sha256-ab9o5n72F78iM1io+OelLnajSMVpZ1bb65Sj2OAJmsE=";
+          })
+        ];
+
+        configureFlags =
+          builtins.filter (
+            p:
+            !(prev.lib.hasPrefix "--with-onnx-runtime=" p)
+            #   && !(prev.lib.hasPrefix "--with-wasi-sysroot=" p)
+            && !(prev.lib.hasPrefix "--enable-default-toolkit=" p)
+          ) (old.configureFlags or [ ])
+          ++ [
+            "--without-onnx-runtime"
+            #    "--without-wasm-sandboxed-libraries"
+            "--enable-default-toolkit=cairo-gtk3-wayland-only"
+          ];
+
+        postPatch = (old.postPatch or "") + ''
+          sed -i '1i #include <cstdint>' third_party/parakeet.cpp/src/backend.hpp
+          sed -i 's/\("files":{\)[^}]*/\1/' \
+            third_party/rust/audio_thread_priority/.cargo-checksum.json
+            sed -i '/#include <linux\/prctl.h>/d' \
+              third_party/libwebrtc/rtc_base/platform_thread_types.cc
+        '';
+      });
 
   scenefx = prev.scenefx.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''

@@ -803,7 +803,7 @@ in
     foot
     adwaita-icon-theme
     wrappers.fuzzel
-    wrappers.firefox.firefox-bin-void
+    wrappers.firefox.firefox-musl
     handlr-regex
     oo7-server-fix
     oo7-portal
