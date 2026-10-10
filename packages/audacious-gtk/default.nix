@@ -10,7 +10,7 @@
   withPlugins ? false,
 }:
 
-stdenv.mkDerivation( finalAttrs: {
+stdenv.mkDerivation (finalAttrs: {
   pname = "audacious";
   version = "4.6.1";
 
