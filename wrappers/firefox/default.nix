@@ -288,6 +288,6 @@ let
     };
 in
 {
-  firefox-bin-void = mkWrappedFirefox firefox-bin-void;
+  firefox-musl = mkWrappedFirefox pkgs.firefox-unwrapped;
   firefox-bin = mkWrappedFirefox pkgs.firefox-bin-unwrapped;
 }
