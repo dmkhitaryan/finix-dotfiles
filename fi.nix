@@ -118,7 +118,9 @@ in
         wireplumber
         bluetooth
         docker
-      ];
+      ] ++ (with sources.finix-community.nixosModules; [
+        steam
+        ]);
       specialArgs = {
         finix = sources.finix;
         modulesPath = toString sources.nixpkgs + "/nixos/modules";

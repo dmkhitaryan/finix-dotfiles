@@ -151,7 +151,7 @@ in
     bash.enable = true;
     brightnessctl.enable = true;
     gnome-keyring.enable = false;
-    openbox.enable = true;
+    steam.enable = true;
 
     limine = {
       enable = true;
@@ -242,8 +242,8 @@ in
           "nix-command"
           "flakes"
         ];
-        max-jobs = 2;
-        cores = 4;
+        max-jobs = 4;
+        cores = 3;
         nix-path = "";
         trusted-users = [
           "root"
@@ -365,10 +365,6 @@ in
     "/share/icons"
   ];
 
-  environment.etc."X11/xinit/xinitrc".text = ''
-    exec openbox-session
-  '';
-
   environment.etc."xdg/xdg-desktop-portal/niri-portals.conf".text = ''
     [preferred]
     default=gnome;gtk;
@@ -442,9 +438,7 @@ in
     jq
     yt-dlp
     wget
-    (git.override {
-      perlSupport = false;
-    })
+    gitMinimal
     iputils
     iwmenu
     iproute2
@@ -452,15 +446,14 @@ in
     libnotify
     wl-clipboard-rs
     xsel
+    vipsdisp
     foot
     adwaita-icon-theme
-    catppuccin-cursors.frappeLavender
     wrappers.fuzzel
     wrappers.firefox.firefox-bin
     xdg-utils-perlless
     vesktop
     swaybg
-    yazi
     dconf
     thunar
     fastfetch
@@ -469,8 +462,6 @@ in
     tree
     btop
     libarchive
-    grim
-    slurp
     swaynotificationcenter
     wrappers.waybar-master
     wrappers.niri
@@ -483,7 +474,7 @@ in
     lutris-free
     ryzenadj
     usbmuxd
-    antigravity
     protonplus
+    vlc
   ];
 }
