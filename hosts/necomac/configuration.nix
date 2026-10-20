@@ -6,18 +6,17 @@
   finix,
   sources,
   ...
-}:
-let
+}: let
   wrappers = import ../../wrappers {
     inherit pkgs;
     hostName = config.networking.hostName;
     wireplumber = config.programs.wireplumber.package;
     udevPkg = pkgs.libudev-zero;
   };
-  avd-fw = pkgs.callPackage ../../packages/avd-fw { };
-  libva-v4l2-request = pkgs.callPackage ../../packages/libva-v4l2-request { };
-  endcord = pkgs.callPackage ../../packages/endcord { };
-  makoCustom = pkgs.callPackage ../../packages/mako { };
+  avd-fw = pkgs.callPackage ../../packages/avd-fw {};
+  libva-v4l2-request = pkgs.callPackage ../../packages/libva-v4l2-request {};
+  endcord = pkgs.callPackage ../../packages/endcord {};
+  makoCustom = pkgs.callPackage ../../packages/mako {};
 
   xdg-open = pkgs.writeScriptBin "xdg-open" ''
     #!${pkgs.busybox}/bin/ash
@@ -29,16 +28,6 @@ let
     exec ${lib.getExe pkgs.handlr-regex} open "$@"
   '';
 
-  lspPluginsLv2 = pkgs.lsp-plugins.override {
-    buildCLAP = false;
-    buildGStreamer = false;
-    buildJACK = false;
-    buildLADSPA = false;
-    buildLV2 = true;
-    buildVST2 = false;
-    buildVST3 = false;
-  };
-
   xdg-desktop-portal-rdmaless =
     (pkgs.xdg-desktop-portal.override {
       umockdev = pkgs.umockdev.override {
@@ -47,27 +36,15 @@ let
         };
       };
     }).overrideAttrs
-      (old: {
-        buildInputs = builtins.filter (dep: dep != pkgs.flatpak) old.buildInputs;
+    (old: {
+      buildInputs = builtins.filter (dep: dep != pkgs.flatpak) old.buildInputs;
 
-        mesonFlags = old.mesonFlags ++ [
+      mesonFlags =
+        old.mesonFlags
+        ++ [
           "-Dflatpak-interfaces=disabled"
         ];
-      });
-
-  pam = pkgs.symlinkJoin {
-    name = "linux-pam-with-lastlog2";
-
-    paths = [
-      pkgs.pam
-    ];
-
-    postBuild = ''
-      ln -s \
-        ${pkgs.util-linux.lastlog}/lib/security/pam_lastlog2.so \
-        $out/lib/security/pam_lastlog.so
-    '';
-  };
+    });
 
   flakeRegistry = builtins.toFile "flake-registry.json" (
     builtins.toJSON {
@@ -93,13 +70,15 @@ let
 
   # https://github.com/emersion/xdg-desktop-portal-wlr/issues/395 still helps it seems.
   xdg-desktop-portal-wlr = pkgs.xdg-desktop-portal-wlr.overrideAttrs (old: {
-    postPatch = (old.postPatch or "") + ''
-      substituteInPlace include/pipewire_screencast.h \
-        --replace-fail '#define XDPW_PWR_BUFFERS 2' \
-                       '#define XDPW_PWR_BUFFERS 4' \
-        --replace-fail '#define XDPW_PWR_BUFFERS_MIN 2' \
-                       '#define XDPW_PWR_BUFFERS_MIN 4'
-    '';
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        substituteInPlace include/pipewire_screencast.h \
+          --replace-fail '#define XDPW_PWR_BUFFERS 2' \
+                         '#define XDPW_PWR_BUFFERS 4' \
+          --replace-fail '#define XDPW_PWR_BUFFERS_MIN 2' \
+                         '#define XDPW_PWR_BUFFERS_MIN 4'
+      '';
   });
 
   fixAppleDrm = pkgs.writeScriptBin "fix-apple-drm" ''
@@ -121,16 +100,20 @@ let
       enableSystemd = false;
       udev = pkgs.libudev-zero;
     }).overrideAttrs
-      (old: {
-        preConfigure = (old.preConfigure or "") + ''
+    (old: {
+      preConfigure =
+        (old.preConfigure or "")
+        + ''
           export PKG_CONFIG_PATH="${pkgs.libudev-zero}/lib/pkgconfig:$PKG_CONFIG_PATH"
           export NIX_LDFLAGS="-L${pkgs.libudev-zero}/lib $NIX_LDFLAGS"
         '';
 
-        patches = (old.patches or [ ]) ++ [
+      patches =
+        (old.patches or [])
+        ++ [
           "${finix}/modules/programs/pipewire/pipewire.patch"
         ];
-      });
+    });
 
   start-webcamera = pkgs.writeScriptBin "start-webcamera" ''
     #!${pkgs.busybox}/bin/ash
@@ -155,14 +138,15 @@ let
     pkill -KILL -u "$USER" -x wireplumber 2>/dev/null || true
     pkill -KILL -u "$USER" -x pipewire 2>/dev/null || true
 
-    /run/current-system/sw/bin/pipewire &
+    # Pin the audio stack to the E-cores (CPUs 0-1, mask 0x3).
+    taskset 0x3 /run/current-system/sw/bin/pipewire &
 
     until [ -S "$XDG_RUNTIME_DIR/pipewire-0" ]; do
       sleep 1
     done
 
-    /run/current-system/sw/bin/wireplumber &
-    /run/current-system/sw/bin/pipewire-pulse &
+    taskset 0x3 /run/current-system/sw/bin/wireplumber &
+    taskset 0x3 /run/current-system/sw/bin/pipewire-pulse &
 
     until wpctl status -n 2>/dev/null \
       | grep -qE 'alsa_output\..*\[vol:'
@@ -213,56 +197,64 @@ let
   '';
 
   termfilechooser = pkgs.xdg-desktop-portal-termfilechooser.overrideAttrs (old: {
-    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
-      pkgs.makeWrapper
-    ];
+    nativeBuildInputs =
+      (old.nativeBuildInputs or [])
+      ++ [
+        pkgs.makeWrapper
+      ];
 
-    postInstall = (old.postInstall or "") + ''
-      wrapProgram \
-        "$out/share/xdg-desktop-portal-termfilechooser/nnn-wrapper.sh" \
-        --prefix PATH : ${
+    postInstall =
+      (old.postInstall or "")
+      + ''
+        wrapProgram \
+          "$out/share/xdg-desktop-portal-termfilechooser/nnn-wrapper.sh" \
+          --prefix PATH : ${
           lib.makeBinPath [
             pkgs.nnn
             pkgs.busybox
           ]
         }
 
-      mkdir -p "$out/etc/xdg/xdg-desktop-portal-termfilechooser"
+        mkdir -p "$out/etc/xdg/xdg-desktop-portal-termfilechooser"
 
-      cat > "$out/etc/xdg/xdg-desktop-portal-termfilechooser/config" <<EOF
-      [filechooser]
-      cmd=$out/share/xdg-desktop-portal-termfilechooser/nnn-wrapper.sh
-      default_dir=\$HOME
-      env=TERMCMD=foot -T nnn-filechooser
-      open_mode=suggested
-      save_mode=last
-      EOF
-    '';
+        cat > "$out/etc/xdg/xdg-desktop-portal-termfilechooser/config" <<EOF
+        [filechooser]
+        cmd=$out/share/xdg-desktop-portal-termfilechooser/nnn-wrapper.sh
+        default_dir=\$HOME
+        env=TERMCMD=foot -T nnn-filechooser
+        open_mode=suggested
+        save_mode=last
+        EOF
+      '';
   });
 
   pass-secret-service-fix = pkgs.pass-secret-service.overrideAttrs (old: {
-    postInstall = (old.postInstall or "") + ''
-            cat > "$out/share/dbus-1/services/org.freedesktop.secrets.service" <<EOF
-      [D-BUS Service]
-      Name=org.freedesktop.secrets
-      Exec=$out/bin/pass_secret_service
-      EOF
-    '';
+    postInstall =
+      (old.postInstall or "")
+      + ''
+              cat > "$out/share/dbus-1/services/org.freedesktop.secrets.service" <<EOF
+        [D-BUS Service]
+        Name=org.freedesktop.secrets
+        Exec=$out/bin/pass_secret_service
+        EOF
+      '';
   });
 
   oo7-server-fix = pkgs.oo7-server.overrideAttrs (old: {
-    postInstall = (old.postInstall or "") + ''
-            cat > "$out/share/dbus-1/services/org.freedesktop.secrets.service" <<EOF
-      [D-BUS Service]
-      Name=org.freedesktop.secrets
-      Exec=$out/libexec/oo7-daemon
-      EOF
-    '';
+    postInstall =
+      (old.postInstall or "")
+      + ''
+              cat > "$out/share/dbus-1/services/org.freedesktop.secrets.service" <<EOF
+        [D-BUS Service]
+        Name=org.freedesktop.secrets
+        Exec=/run/wrappers/bin/oo7-daemon
+        EOF
+      '';
   });
 
   mesaAsahi =
     (pkgs.mesa.override {
-      vulkanDrivers = [ "asahi" ];
+      vulkanDrivers = ["asahi"];
 
       galliumDrivers = [
         "asahi"
@@ -271,8 +263,10 @@ let
 
       vulkanLayers = [
         "device-select"
-        "overlay"
-        "screenshot"
+      ];
+
+      eglPlatforms = [
+        "wayland"
       ];
 
       enablePatentEncumberedCodecs = false;
@@ -280,36 +274,59 @@ let
 
       udev = pkgs.libudev-zero;
     }).overrideAttrs
-      (old: {
-        mesonFlags =
-          map (
-            flag:
-            if lib.hasPrefix "-Dtools=" flag then
-              "-Dtools="
-            else if lib.hasPrefix "-Dintel-rt=" flag then
-              "-Dintel-rt=disabled"
-            else if lib.hasPrefix "-Dteflon=" flag then
-              "-Dteflon=false"
-            else if lib.hasPrefix "-Dgallium-rusticl=" flag then
-              "-Dgallium-rusticl=false"
-            else if lib.hasPrefix "-Dgallium-extra-hud=" flag then
-              "-Dgallium-extra-hud=false"
-            else
-              flag
-          ) (lib.filter (flag: !(lib.hasPrefix "-Dgallium-rusticl-enable-drivers=" flag)) old.mesonFlags)
-          ++ [ "-Dgallium-va=disabled" ];
+    (old: {
+      buildInputs = builtins.filter (
+        p:
+          !(
+            lib.isDerivation p
+            && builtins.elem (lib.getName p) [
+              "libx11"
+              "libxext"
+              "libxxf86vm"
+              "libxcb"
+              "libxshmfence"
+              "libxrandr"
+              "libxfixes"
+              "libxrender"
+              "xorgproto"
+            ]
+          )
+      ) (old.buildInputs or []);
 
-        postInstall = (old.postInstall or "") + ''
+      mesonFlags =
+        map (
+          flag:
+            if lib.hasPrefix "-Dtools=" flag
+            then "-Dtools="
+            else if lib.hasPrefix "-Dintel-rt=" flag
+            then "-Dintel-rt=disabled"
+            else if lib.hasPrefix "-Dteflon=" flag
+            then "-Dteflon=false"
+            else if lib.hasPrefix "-Dgallium-rusticl=" flag
+            then "-Dgallium-rusticl=false"
+            else if lib.hasPrefix "-Dgallium-extra-hud=" flag
+            then "-Dgallium-extra-hud=false"
+            else flag
+        ) (lib.filter (flag: !(lib.hasPrefix "-Dgallium-rusticl-enable-drivers=" flag)) old.mesonFlags)
+        ++ [
+          "-Dgallium-va=disabled"
+          "-Dglx=disabled"
+          "-Dxlib-lease=disabled"
+        ];
+
+      postInstall =
+        (old.postInstall or "")
+        + ''
           rm -rf "$opencl/etc/OpenCL"
           mkdir -p "$spirv2dxil" "$opencl"
         '';
 
-        postFixup =
-          lib.replaceStrings
-            [ "$out/lib/libgallium*.so $opencl/lib/libRusticlOpenCL.so" ]
-            [ "$out/lib/libgallium*.so" ]
-            (old.postFixup or "");
-      });
+      postFixup =
+        lib.replaceStrings
+        ["$out/lib/libgallium*.so $opencl/lib/libRusticlOpenCL.so"]
+        ["$out/lib/libgallium*.so"]
+        (old.postFixup or "");
+    });
 
   rtkitMusl = pkgs.rtkit.overrideAttrs (old: {
     postPatch =
@@ -327,14 +344,13 @@ let
           syscall(SYS_sched_setscheduler, (pid), (policy), (param))'
       '';
   });
-
-in
-{
+in {
   imports = [
     ./hardware-configuration.nix
     ./apple-silicon-support
     ../../modules/security/wrappers
     ../../modules/environment/path
+    ../../packages/limine-install
     #./sddm.nix
   ];
 
@@ -358,15 +374,21 @@ in
     pkgs.gzip
   ];
   finit.runlevel = 3;
-  finit.cgroups.system.settings = {
-    "cpu.weight" = 100;
-  };
 
   finit.services.nix-daemon = {
     environment.CURL_CA_BUNDLE = config.security.pki.caBundle;
+    cgroup = lib.mkForce {
+      performance = {
+        "pids.max" = 1048576; # Restrict nix-daemon to P-cores only.
+      };
+    };
   };
 
   finit.services.dbus.notify = lib.mkForce "none"; # we don't use systemd at all.
+
+  finit.tmpfiles.rules = [
+    "d /var/lib/lastlog 0755 - - -"
+  ];
 
   finit.tasks.battery-charge-limit = {
     description = "Set battery limit (to 80%)";
@@ -385,7 +407,7 @@ in
   };
 
   finit.tasks.bluetooth-late = {
-    conditions = [ "!service/greetd/ready" ];
+    conditions = ["!service/greetd/ready"];
     command = "${lib.getExe' pkgs.kmod "modprobe"} hci_bcm4377";
   };
 
@@ -415,7 +437,6 @@ in
         "@wheel"
       ];
       warn-dirty = "false";
-
     };
   };
 
@@ -478,6 +499,7 @@ in
     portals = [
       pkgs.xdg-desktop-portal-gtk
       xdg-desktop-portal-wlr
+      pkgs.oo7-portal
       termfilechooser
     ];
   };
@@ -486,7 +508,7 @@ in
     coreutils.package = pkgs.busybox;
 
     limine = {
-      enable = true;
+      enable = false;
       settings.editor_enabled = true; # Disable on systems that need security
       maxGenerations = 5;
     };
@@ -495,14 +517,14 @@ in
       enable = true;
       alsa.enable = true;
       package = pkgs.pipewire;
-      packages = [ pkgs.asahi-audio ];
+      packages = [pkgs.asahi-audio];
 
       settings = {
         "node.rules" = [
           {
             matches = [
-              { "node.name" = "audio_effect.j314-convolver"; }
-              { "node.name" = "effect_output.j314-convolver"; }
+              {"node.name" = "audio_effect.j314-convolver";}
+              {"node.name" = "effect_output.j314-convolver";}
             ];
 
             actions = {
@@ -537,9 +559,9 @@ in
   fonts.fontconfig = {
     enable = true;
     defaultFonts = {
-      serif = [ "Iosevka" ];
-      sansSerif = [ "Iosevka" ];
-      monospace = [ "Cozette" ];
+      serif = ["Iosevka"];
+      sansSerif = ["Iosevka"];
+      monospace = ["Cozette"];
     };
   };
 
@@ -573,7 +595,7 @@ in
     rtkit.enable = true;
     rtkit.package = rtkitMusl;
     # https://github.com/finix-community/finix/blob/37c6c49aac1ba686fc7b4def599e6a0a7e3ef0bc/modules/services/rtkit/default.nix#L42-L44
-    rtkit.extraGroups = [ config.services.seatd.group ];
+    rtkit.extraGroups = [config.services.seatd.group];
     bluetooth.enable = true;
     mdevd.hotplugRules = lib.mkMerge [
       # Run ahead of 'generic MODALIAS' (order 250).
@@ -611,13 +633,13 @@ in
       "pipewire"
       config.services.seatd.group
     ];
-    packages = with pkgs; [ ];
+    packages = with pkgs; [];
   };
 
   hardware.graphics.enable = true;
   hardware.graphics.package = mesaAsahi;
-  hardware.graphics.extraPackages = [ libva-v4l2-request ];
-  hardware.firmware = [ avd-fw ];
+  hardware.graphics.extraPackages = [libva-v4l2-request];
+  hardware.firmware = [avd-fw];
 
   finit.services = {
     speakersafetyd = {
@@ -635,6 +657,31 @@ in
     "/share/mime"
   ];
 
+  # Thanks for the suggestion, BestInfinity.
+  finit.cgroups = {
+    init."cpuset.cpus" = "0-9";
+
+    system = {
+      "cpuset.cpus" = "0-9";
+      "cpu.weight" = 100;
+    };
+
+    user = {
+      "cpuset.cpus" = "0-9";
+      "cpu.weight" = 200;
+    };
+
+    background = {
+      "cpuset.cpus" = "0-1"; # E-cores.
+      "cpu.weight" = 20;
+    };
+
+    performance = {
+      "cpuset.cpus" = "2-9"; # P-cores.
+      "cpu.weight" = 100;
+    };
+  };
+
   environment.etc."xdg/xdg-desktop-portal/mango-portals.conf".text = ''
     [preferred]
     default=wlr;gtk;
@@ -651,10 +698,11 @@ in
   '';
 
   providers.scheduler.backend = "anacron";
+  providers.bootloader.backend = "limine-sh";
   providers.privileges.rules = [
     {
-      users = [ "jagerroni" ];
-      groups = [ ];
+      users = ["jagerroni"];
+      groups = [];
       runAs = "root";
       requirePassword = false;
       command = "/run/current-system/sw/bin/initctl";
@@ -665,8 +713,8 @@ in
       ];
     }
     {
-      users = [ "jagerroni" ];
-      groups = [ ];
+      users = ["jagerroni"];
+      groups = [];
       runAs = "root";
       requirePassword = false;
       command = "/run/current-system/sw/bin/initctl";
@@ -677,39 +725,39 @@ in
       ];
     }
     {
-      users = [ "jagerroni" ];
+      users = ["jagerroni"];
       runAs = "root";
       requirePassword = false;
       command = lib.getExe' pkgs.kmod "modprobe";
-      args = [ "apple_isp" ];
+      args = ["apple_isp"];
     }
     {
-      users = [ "jagerroni" ];
+      users = ["jagerroni"];
       runAs = "root";
       command = lib.getExe fixAppleDrm;
       requirePassword = false;
     }
     {
-      users = [ "jagerroni" ];
-      groups = [ ];
+      users = ["jagerroni"];
+      groups = [];
       runAs = "root";
       requirePassword = false;
       command = "poweroff";
     }
     {
-      users = [ "jagerroni" ];
-      groups = [ ];
+      users = ["jagerroni"];
+      groups = [];
       runAs = "root";
       requirePassword = false;
       command = "reboot";
     }
     {
-      users = [ "jagerroni" ];
-      groups = [ ];
+      users = ["jagerroni"];
+      groups = [];
       runAs = "root";
       requirePassword = false;
       command = "initctl";
-      args = [ "suspend" ];
+      args = ["suspend"];
     }
   ];
   environment.variables.LANGUAGE = "en_GB:en";
@@ -717,13 +765,21 @@ in
     # All needed for sound on Asahi Linux.
     pkgs.triforce-lv2
     pkgs.bankstown-lv2
-    lspPluginsLv2
+    pkgs.lsp-plugins
   ];
 
   security.pam.environment.NH_FILE.default = "/home/jagerroni/dotfiles/fi.nix";
   security.pam.environment.NH_ATTRP.default = "finixConfigurations.necomac";
   security.pam.environment.NIX_PATH.default = "nixpkgs=flake:nixpkgs";
   security.pam.environment.NH_NOM.default = "no";
+  security.pam.environment.MOZ_DISABLE_RDD_SANDBOX.default = "1";
+
+  security.wrappers.oo7-daemon = {
+    owner = "root";
+    group = "root";
+    capabilities = "cap_ipc_lock=ep";
+    source = "${oo7-server-fix}/libexec/oo7-daemon";
+  };
 
   security.pam.services.greetd.text = lib.mkForce ''
     # Account management.
@@ -742,6 +798,7 @@ in
     session required pam_loginuid.so # loginuid (order 10300)
     session required pam_limits.so conf=/etc/security/limits.conf
 
+    session optional ${pkgs.util-linux.lastlog}/lib/security/pam_lastlog2.so silent
     session optional ${pkgs.pam_rundir}/lib/security/pam_rundir.so
   '';
 
@@ -815,7 +872,7 @@ in
     triforce-lv2
     bankstown-lv2
     start-pipewire
-    lspPluginsLv2
+    lsp-plugins
     swaybg
     dconf
     nh-unwrapped
