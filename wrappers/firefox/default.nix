@@ -1,15 +1,14 @@
 {
   pkgs,
   udevPkg ? null,
-}:
-
-let
+}: let
   preferencesStatus = "user";
-  firefox-bin-void = pkgs.callPackage ../../packages/firefox-bin-void { };
+  firefox-bin-void = pkgs.callPackage ../../packages/firefox-bin-void {};
   xdg-utils = pkgs.handlr-regex;
 
   wrapFirefox = pkgs.wrapFirefox.override {
     inherit xdg-utils;
+    libxscrnsaver = pkgs.emptyDirectory;
     ffmpeg_9 = pkgs.ffmpeg-headless;
     udev = udevPkg;
     pipewire = pkgs.pipewire;
@@ -278,16 +277,15 @@ let
   extraPrefs = pkgs.lib.concatStringsSep "\n" (
     pkgs.lib.mapAttrsToList (
       name: value: "pref(${builtins.toJSON name}, ${builtins.toJSON value});"
-    ) preferences
+    )
+    preferences
   );
 
-  mkWrappedFirefox =
-    firefox:
+  mkWrappedFirefox = firefox:
     wrapFirefox firefox {
-      inherit extraPrefs;
+      inherit extraPrefs extraPolicies;
     };
-in
-{
+in {
   firefox-musl = mkWrappedFirefox pkgs.firefox-unwrapped;
   firefox-bin = mkWrappedFirefox pkgs.firefox-bin-unwrapped;
 }

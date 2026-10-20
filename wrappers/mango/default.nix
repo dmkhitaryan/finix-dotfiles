@@ -1,11 +1,13 @@
-{
-  pkgs,
-}:
-let
+{pkgs}: let
   inherit (pkgs) lib;
-  wlrootsNoX = pkgs.wlroots_0_20.override {
-    enableXWayland = false;
-  };
+  wlrootsNoX =
+    (pkgs.wlroots_0_20.override {
+      enableXWayland = false;
+    }).overrideAttrs (old: {
+      mesonFlags =
+        builtins.filter (f: !(pkgs.lib.hasPrefix "-Dbackends=" f)) (old.mesonFlags or [])
+        ++ ["-Dbackends=drm,libinput"];
+    });
 
   scenefxNoX = pkgs.scenefx.override {
     wlroots_0_20 = wlrootsNoX;
@@ -45,31 +47,31 @@ let
     exit "$status"
   '';
 in
-pkgs.symlinkJoin {
-  name = "mango-wrapped-${mango.version}";
-  paths = [ mango ];
-  nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
-  postBuild = ''
-    wrapProgram "$out/bin/mango" \
-      --add-flags "-c ${builtins.toString ./config.conf}"
+  pkgs.symlinkJoin {
+    name = "mango-wrapped-${mango.version}";
+    paths = [mango];
+    nativeBuildInputs = [pkgs.makeBinaryWrapper];
+    postBuild = ''
+      wrapProgram "$out/bin/mango" \
+        --add-flags "-c ${builtins.toString ./config.conf}"
 
-    rm "$out/share/wayland-sessions/mango.desktop"
+      rm "$out/share/wayland-sessions/mango.desktop"
 
-    cat > "$out/share/wayland-sessions/mango.desktop" <<EOF
-    [Desktop Entry]
-    Encoding=UTF-8
-    Name=Mango
-    DesktopNames=mango;wlroots
-    Comment=mango WM
-    Exec=${mangoSession}
-    Icon=mango
-    Type=Application
-    EOF
-  '';
+      cat > "$out/share/wayland-sessions/mango.desktop" <<EOF
+      [Desktop Entry]
+      Encoding=UTF-8
+      Name=Mango
+      DesktopNames=mango;wlroots
+      Comment=mango WM
+      Exec=${mangoSession}
+      Icon=mango
+      Type=Application
+      EOF
+    '';
 
-  passthru = {
-    session = mangoSession;
-  };
+    passthru = {
+      session = mangoSession;
+    };
 
-  meta.mainProgram = "mango";
-}
+    meta.mainProgram = "mango";
+  }
