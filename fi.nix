@@ -6,45 +6,42 @@ let
   ];
   mkFinixSystem = sources.finix.lib.finixSystem;
 
-  mkHost =
-    {
-      system,
-      modules,
-      overlays ? [ ],
-      specialArgs ? { },
-      pkgsSet ? "default",
-    }:
-    let
-      pkgs = import sources.nixpkgs (
-        {
-          inherit overlays;
-          config.allowUnfree = true;
+  mkHost = {
+    system,
+    modules,
+    overlays ? [],
+    specialArgs ? {},
+    pkgsSet ? "default",
+  }: let
+    pkgs = import sources.nixpkgs (
+      {
+        inherit overlays;
+        config.allowUnfree = true;
+      }
+      // (
+        if pkgsSet == "musl"
+        then {
+          localSystem = {
+            inherit system;
+            config = "aarch64-unknown-linux-musl";
+          };
         }
-        // (
-          if pkgsSet == "musl" then
-            {
-              localSystem = {
-                inherit system;
-                config = "aarch64-unknown-linux-musl";
-              };
-            }
-          else
-            {
-              inherit system;
-            }
-        )
-      );
-    in
+        else {
+          inherit system;
+        }
+      )
+    );
+  in
     mkFinixSystem {
       inherit (pkgs) lib;
-      specialArgs = {
-        inherit sources;
-      }
-      // specialArgs;
-      modules = [ { nixpkgs.pkgs = sources.nixpkgs.lib.mkDefault pkgs; } ] ++ modules;
+      specialArgs =
+        {
+          inherit sources;
+        }
+        // specialArgs;
+      modules = [{nixpkgs.pkgs = sources.nixpkgs.lib.mkDefault pkgs;}] ++ modules;
     };
-in
-{
+in {
   finixConfigurations = {
     necomac = mkHost {
       system = "aarch64-linux";
@@ -55,8 +52,7 @@ in
         (import ./hosts/necomac/overlay.nix)
       ];
 
-      modules =
-        with sources.finix.nixosModules;
+      modules = with sources.finix.nixosModules;
         [
           (./hosts/necomac/configuration.nix)
           nix-daemon
@@ -66,7 +62,7 @@ in
           limine
           polkit
           getty
-          # bash
+          bash
           dhcpcd
           iwd
           tuigreet
@@ -79,9 +75,6 @@ in
         ]
         ++ (with sources.finix-community.nixosModules; [
           bootchart
-        ])
-        ++ (with sources.finix-test.nixosModules; [
-          bash
         ]);
       specialArgs = {
         finix = sources.finix;
@@ -91,7 +84,7 @@ in
 
     necoarc = mkHost {
       system = "x86_64-linux";
-      overlays = [ ];
+      overlays = [];
       modules = with sources.finix.nixosModules; [
         (./hosts/necoarc/configuration.nix)
         nix-daemon
@@ -127,5 +120,4 @@ in
       };
     };
   };
-
 }
