@@ -4,18 +4,17 @@
   buildUBoot,
   m1n1,
 }:
-
 (buildUBoot rec {
   src = fetchFromGitHub {
     owner = "AsahiLinux";
     repo = "u-boot";
     tag = "asahi-v2026.07-3";
-    hash = "sha256-DbXS8L3j5w8ryYknR+DnAonAdPMNNLaBwWyc27vK0r4=";
+    hash = "sha256-GOuoDg0d77fXMZMzoeBfKqIPlZUZCDnD+OHy+q6o/JY=";
   };
   version = "2026.07-3-asahi";
 
   defconfig = "apple_m1_defconfig";
-  extraMeta.platforms = [ "aarch64-linux" ];
+  extraMeta.platforms = ["aarch64-linux"];
   filesToInstall = [
     "u-boot-nodtb.bin.gz"
     "m1n1-u-boot.bin"
@@ -41,20 +40,22 @@
     CONFIG_BOOTCOMMAND="if load nvme ''${fw_dev_part} ''${kernel_addr_r} /EFI/BOOT/BOOTAA64.EFI; then bootefi ''${kernel_addr_r}; fi; bootflow scan -b"
   '';
 }).overrideAttrs
-  (o: {
-    # nixos's downstream patches are not applicable
-    patches = [
-    ];
+(o: {
+  # nixos's downstream patches are not applicable
+  patches = [
+  ];
 
-    preInstall = ''
-      # compress so that m1n1 knows U-Boot's size and can find things after it
-      gzip -n u-boot-nodtb.bin
-      cat ${m1n1}/lib/m1n1/m1n1.bin arch/arm/dts/t[68]*.dtb u-boot-nodtb.bin.gz > m1n1-u-boot.bin
-    '';
+  preInstall = ''
+    # compress so that m1n1 knows U-Boot's size and can find things after it
+    gzip -n u-boot-nodtb.bin
+    cat ${m1n1}/lib/m1n1/m1n1.bin arch/arm/dts/t[68]*.dtb u-boot-nodtb.bin.gz > m1n1-u-boot.bin
+  '';
 
-    postPatch = (o.postPatch or "") + ''
+  postPatch =
+    (o.postPatch or "")
+    + ''
       substituteInPlace board/apple/mac/mac.env \
         --replace-fail 'stdout=vidconsole,serial' 'stdout=vidconsole' \
         --replace-fail 'stderr=vidconsole,serial' 'stderr=vidconsole'
     '';
-  })
+})
