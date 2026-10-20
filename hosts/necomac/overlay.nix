@@ -1,60 +1,49 @@
-final: prev:
-let
-  wildStdenv =
-    let
-      p = prev.stdenv;
-      ok = plat: plat.isLinux && plat.isElf;
-    in
-    if ok p.buildPlatform && ok p.hostPlatform && ok p.targetPlatform then prev.useWildLinker p else p;
+final: prev: let
+  wildStdenv = let
+    p = prev.stdenv;
+    ok = plat: plat.isLinux && plat.isElf;
+  in
+    if ok p.buildPlatform && ok p.hostPlatform && ok p.targetPlatform
+    then prev.useWildLinker p
+    else p;
 
   php84ForLsp = prev.php84.buildEnv {
     systemdSupport = false;
     valgrindSupport = false;
 
-    extensions =
-      { enabled, ... }:
+    extensions = {enabled, ...}:
       prev.lib.filter (ext: (ext.extensionName or null) != "gettext") enabled;
   };
 
-  orc = prev.orc.override {
-    buildDevDoc = false;
-  };
-
-  gstAll1Scoped = prev.gst_all_1.overrideScope (
+  gstAll1 = prev.gst_all_1.overrideScope (
     _: gstPrev: {
-      gstreamer = gstPrev.gstreamer.override {
-        withRust = false;
-        enableDocumentation = false;
-      };
+      gstreamer =
+        (gstPrev.gstreamer.override {
+          withRust = false;
+          enableDocumentation = false;
+        }).overrideAttrs (old: {
+          postFixup =
+            (old.postFixup or "")
+            + ''
+              rm -f $out/libexec/gstreamer-1.0/gst-plugins-doc-cache-generator
+            '';
+        });
 
       gst-plugins-base = gstPrev.gst-plugins-base.override {
         enableDocumentation = false;
+        enableX11 = false;
       };
     }
   );
 
-  # Preserve the effect of the later gst_all_1 overlay from the old definition.
-  gstAll1 = gstAll1Scoped // {
-    gstreamer = gstAll1Scoped.gstreamer.override {
-      enableDocumentation = false;
-    };
-
-    gst-plugins-base = gstAll1Scoped.gst-plugins-base.override {
-      enableDocumentation = false;
-      orc = final.orc;
-    };
-  };
-
   llvmTargets =
-    if final.stdenv.hostPlatform.isx86_64 then
-      "X86;AMDGPU"
-    else if final.stdenv.hostPlatform.isAarch64 then
-      "AArch64"
-    else
-      throw "Add the LLVM backend list for this host architecture";
+    if final.stdenv.hostPlatform.isx86_64
+    then "X86;AMDGPU"
+    else if final.stdenv.hostPlatform.isAarch64
+    then "AArch64"
+    else throw "Add the LLVM backend list for this host architecture";
 
-  trimLlvm =
-    llvmPkgs:
+  trimLlvm = llvmPkgs:
     llvmPkgs.overrideScope (
       _: llvmPrev: {
         llvm =
@@ -75,9 +64,9 @@ let
               "-DLLVM_INCLUDE_BENCHMARKS=OFF"
             ];
           }).overrideAttrs
-            (_: {
-              doCheck = false;
-            });
+          (_: {
+            doCheck = false;
+          });
 
         clang-unwrapped =
           (llvmPrev.clang-unwrapped.override {
@@ -93,14 +82,13 @@ let
               "-DCLANG_INCLUDE_TESTS=OFF"
             ];
           }).overrideAttrs
-            (_: {
-              doCheck = false;
-            });
+          (_: {
+            doCheck = false;
+          });
       }
     );
 
-  trimLlvmOverridable =
-    llvmPkgs:
+  trimLlvmOverridable = llvmPkgs:
     (trimLlvm llvmPkgs)
     // {
       override = args: trimLlvmOverridable (llvmPkgs.override args);
@@ -109,73 +97,72 @@ let
   llvm21 = trimLlvmOverridable prev.llvmPackages_21;
   llvm22 = trimLlvmOverridable prev.llvmPackages_22;
 
-  dummy = prev.runCommand "dummy-nix-tests-run" { } "mkdir -p $out";
-  dummyTests = dummy // {
-    tests.run = dummy;
-  };
+  dummy = prev.runCommand "dummy-nix-tests-run" {} "mkdir -p $out";
+  dummyTests =
+    dummy
+    // {
+      tests.run = dummy;
+    };
 
   dummyNixManual =
     prev.runCommand "nix-manual-disabled"
-      {
-        outputs = [
-          "out"
-          "man"
-        ];
-      }
-      ''
-        mkdir -p "$out" "$man"
-      '';
+    {
+      outputs = [
+        "out"
+        "man"
+      ];
+    }
+    ''
+      mkdir -p "$out" "$man"
+    '';
 
   libcameraBase = prev.libcamera.override {
     udev = prev.libudev-zero;
   };
 
-  mkCanberra =
-    pkg:
+  mkCanberra = pkg:
     (pkg.override {
       gst_all_1 = final.gst_all_1;
       withSystemd = false;
       gtkSupport = false;
     }).overrideAttrs
-      (old: {
-        postConfigure = (old.postConfigure or "") + ''
+    (old: {
+      postConfigure =
+        (old.postConfigure or "")
+        + ''
           sed -i '/^finish_cmds=.*ldconfig -n .*libdir/c\finish_cmds=""' libtool
         '';
-      });
-
-  trimFftw =
-    pkg:
-    pkg.overrideAttrs (old: {
-      nativeBuildInputs = builtins.filter (p: prev.lib.getName p != "gfortran-wrapper") (
-        old.nativeBuildInputs or [ ]
-      );
-
-      configureFlags = (old.configureFlags or [ ]) ++ [
-        "--disable-fortran"
-      ];
     });
 
-  pythonPackageOverrides =
-    _: pyPrev:
-    let
-      noTests = {
-        doCheck = false;
-        doInstallCheck = false;
-        checkInputs = [ ];
-        nativeCheckInputs = [ ];
-      };
+  trimFftw = pkg:
+    pkg.overrideAttrs (old: {
+      nativeBuildInputs = builtins.filter (p: prev.lib.getName p != "gfortran-wrapper") (
+        old.nativeBuildInputs or []
+      );
 
-      wrapBuilder =
-        builder: args:
-        if builtins.isFunction args then
-          builder (finalAttrs: (args finalAttrs) // noTests)
-        else
-          builder (args // noTests);
-    in
-    {
-      buildPythonPackage = wrapBuilder pyPrev.buildPythonPackage;
-      buildPythonApplication = wrapBuilder pyPrev.buildPythonApplication;
+      configureFlags =
+        (old.configureFlags or [])
+        ++ [
+          "--disable-fortran"
+        ];
+    });
+
+  pythonPackageOverrides = _: pyPrev: let
+    noTests = {
+      doCheck = false;
+      doInstallCheck = false;
+      checkInputs = [];
+      nativeCheckInputs = [];
     };
+
+    wrapBuilder = builder: args:
+      if builtins.isFunction args
+      then builder (finalAttrs: (args finalAttrs) // noTests)
+      else builder (args // noTests);
+  in {
+    buildPythonPackage = wrapBuilder pyPrev.buildPythonPackage;
+    buildPythonApplication = wrapBuilder pyPrev.buildPythonApplication;
+  };
 
   gsdSchemas = final.stdenvNoCC.mkDerivation {
     pname = "gnome-settings-daemon-gsettings-schemas-minimal";
@@ -201,8 +188,20 @@ let
       runHook postInstall
     '';
   };
-in
-{
+
+  nsprAarchFix = prev.nspr.overrideAttrs (old: {
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        substituteInPlace nspr/pr/include/md/_linux.h \
+          --replace-fail \
+            '#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(ANDROID)' \
+            '#if 1'
+      '';
+  });
+
+  nssFixed = prev.nss_latest.override {nspr = nsprAarchFix;};
+in {
   libpcap = prev.libpcap.override {
     withRdma = false;
   };
@@ -231,32 +230,127 @@ in
     enableJpeg8 = true; # Potentially breaking. YOLO.
   };
 
+  imv = prev.imv.override {
+    withWindowSystem = "wayland";
+  };
+
+  cairo = prev.cairo.override {
+    x11Support = false;
+  };
+
+  pango = prev.pango.override {
+    x11Support = false;
+  };
+
+  orc = prev.orc.override {
+    buildDevDoc = false;
+  };
+
+  netbsd = prev.netbsd.overrideScope (_: nprev: {
+    getent = nprev.getent.overrideAttrs (old: {
+      patches =
+        map (
+          p:
+            final.runCommand "getent-hunks-1-7.patch"
+            {nativeBuildInputs = [final.patchutils];}
+            "filterdiff --hunks=1-7 ${p} > $out"
+        )
+        old.patches;
+
+      postPatch =
+        (old.postPatch or "")
+        + ''
+          sed -i \
+            -e '/^static char \*$/{N;s/^static char \*\nmygetent(/#if 0\nstatic char *\nmygetent(/}' \
+            -e '/^static int$/{N;s/^static int\nprotocols(/#endif\nstatic int\nprotocols(/;s/^static int\nrpc(/#if 0\nstatic int\nrpc(/;s/^static int\nservices(/#endif\nstatic int\nservices(/}' \
+            usr.bin/getent/getent.c
+        '';
+    });
+  });
+
+  libglvnd = prev.libglvnd.overrideAttrs (old: {
+    buildInputs = builtins.filter (
+      p:
+        !(builtins.elem (prev.lib.getName p) [
+          "libx11"
+          "libxext"
+          "xorgproto"
+        ])
+    ) (old.buildInputs or []);
+
+    configureFlags =
+      (old.configureFlags or [])
+      ++ [
+        "--disable-x11"
+        "--disable-glx"
+      ];
+
+    # Upstream postFixup patches libGLX.so, but it's disabled now.
+    postFixup = "";
+  });
+
   alejandra = prev.alejandra.overrideAttrs (old: {
-    env = (old.env or { }) // {
-      #CARGO_PROFILE_RELEASE_OPT_LEVEL = "s";
-      CARGO_PROFILE_RELEASE_LTO = "fat";
-    };
+    env =
+      (old.env or {})
+      // {
+        #CARGO_PROFILE_RELEASE_OPT_LEVEL = "s";
+        CARGO_PROFILE_RELEASE_LTO = "fat";
+      };
+  });
+
+  libxkbcommon = prev.libxkbcommon.overrideAttrs (old: {
+    outputs = builtins.filter (
+      output:
+        !builtins.elem output [
+          "doc"
+        ]
+    ) (old.outputs or []);
+
+    nativeBuildInputs = builtins.filter (
+      p:
+        !(builtins.elem (prev.lib.getName p) [
+          "xvfb"
+          "doxygen"
+        ])
+    ) (old.nativeBuildInputs or []);
+
+    buildInputs = builtins.filter (
+      p: !(builtins.elem (prev.lib.getName p) ["libxcb"])
+    ) (old.buildInputs or []);
+
+    mesonFlags =
+      builtins.filter (
+        p:
+          !(prev.lib.hasPrefix "-Denable-docs=" p)
+          && !(prev.lib.hasPrefix "-Denable-x11=" p)
+          && !(prev.lib.hasPrefix "-Dx-locale-root=" p)
+      ) (old.mesonFlags or [])
+      ++ [
+        "-Denable-docs=false"
+        "-Denable-x11=false"
+      ];
   });
 
   nil =
     (prev.nil.override {
       nix = final.nixVersions.latest;
     }).overrideAttrs
-      (old: {
-        env = old.env // {
+    (old: {
+      env =
+        old.env
+        // {
           #CARGO_PROFILE_RELEASE_OPT_LEVEL = "s";
           CARGO_PROFILE_RELEASE_LTO = "fat";
           CFG_DEFAULT_FORMATTER = prev.lib.getExe final.alejandra;
         };
-        doCheck = false;
-        doInstallCheck = false;
-      });
+      doCheck = false;
+      doInstallCheck = false;
+    });
 
   lsp-plugins =
     (prev.lsp-plugins.override {
       php84 = php84ForLsp;
-
-      buildVST3 = true;
+      buildVST3 = false;
       buildVST2 = false;
       buildCLAP = false;
       buildLV2 = true;
@@ -264,31 +358,47 @@ in
       buildJACK = false;
       buildGStreamer = false;
     }).overrideAttrs
-      (old: {
-        buildInputs = builtins.filter (
-          p:
-          let
-            name = prev.lib.getName p;
-          in
-          name != "jack2" && name != "ladspa-header" && name != "gstreamer" && name != "gst-plugins-base"
-        ) (old.buildInputs or [ ]);
+    (old: {
+      buildInputs = builtins.filter (
+        p: let
+          name = prev.lib.getName p;
+        in
+          !(builtins.elem name [
+            "jack2"
+            "ladspa-header"
+            "gstreamer"
+            "gst-plugins-base"
+            "libxrandr"
+            "libglvnd"
+            "glu"
+          ])
+      ) (old.buildInputs or []);
 
-        postPatch =
-          (old.postPatch or "")
-          + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
-            substituteInPlace modules/lsp-runtime-lib/src/main/ipc/Library.cpp \
-              --replace-fail \
-                "::dlmopen(LM_ID_NEWLM, str, RTLD_NOW)" \
-                "::dlopen(str, RTLD_NOW)"
-          '';
-      });
+      configurePhase = ''
+        runHook preConfigure
+
+        make $makeFlags config \
+          SUB_FEATURES="ui standalone launcher xdg jack pipewire gst clap ladspa vst2"
+
+        runHook postConfigure
+      '';
+
+      postPatch =
+        (old.postPatch or "")
+        + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
+          substituteInPlace modules/lsp-runtime-lib/src/main/ipc/Library.cpp \
+            --replace-fail \
+              "::dlmopen(LM_ID_NEWLM, str, RTLD_NOW)" \
+              "::dlopen(str, RTLD_NOW)"
+        '';
+    });
 
   spandsp = prev.spandsp.overrideAttrs (old: {
     checkPhase =
       builtins.replaceStrings
-        [ "ademco_contactid_tests|dtmf_rx_tests" ]
-        [ "ademco_contactid_tests|modem_echo_tests|dtmf_rx_tests" ]
-        old.checkPhase;
+      ["ademco_contactid_tests|dtmf_rx_tests"]
+      ["ademco_contactid_tests|modem_echo_tests|dtmf_rx_tests"]
+      old.checkPhase;
   });
 
   gst_all_1 = gstAll1;
@@ -305,36 +415,40 @@ in
     udev = prev.libudev-zero;
   };
 
-  nixVersions = prev.nixVersions // {
-    latest = prev.nixVersions.latest.overrideScope (
-      final: old: {
-        nix-util-tests = dummyTests;
-        nix-store-tests = dummyTests;
-        nix-expr-tests = dummyTests;
-        nix-fetchers-tests = dummyTests;
-        nix-flake-tests = dummyTests;
-        nix-functional-tests = null;
-        nix-manual = dummyNixManual;
+  nixVersions =
+    prev.nixVersions
+    // {
+      latest = prev.nixVersions.latest.overrideScope (
+        final: old: {
+          nix-util-tests = dummyTests;
+          nix-store-tests = dummyTests;
+          nix-expr-tests = dummyTests;
+          nix-fetchers-tests = dummyTests;
+          nix-flake-tests = dummyTests;
+          nix-functional-tests = null;
+          nix-manual = dummyNixManual;
 
-        nix-store = old.nix-store.override {
-          withAWS = false;
-        };
+          nix-store = old.nix-store.override {
+            withAWS = false;
+          };
 
-        nix-util = old.nix-util.overrideAttrs (oldAttrs: {
-          postPatch = (oldAttrs.postPatch or "") + ''
-            substituteInPlace unix/file-descriptor.cc \
-              --replace-fail \
-                '#include <fcntl.h>' \
-                $'#include <fcntl.h>\n#include <sys/syscall.h>'
-          '';
-        });
-      }
-    );
-  };
+          nix-util = old.nix-util.overrideAttrs (oldAttrs: {
+            postPatch =
+              (oldAttrs.postPatch or "")
+              + ''
+                substituteInPlace unix/file-descriptor.cc \
+                  --replace-fail \
+                    '#include <fcntl.h>' \
+                    $'#include <fcntl.h>\n#include <sys/syscall.h>'
+              '';
+          });
+        }
+      );
+    };
 
   onetbb = prev.onetbb.overrideAttrs (old: {
     disabledTests =
-      (old.disabledTests or [ ])
+      (old.disabledTests or [])
       ++ prev.lib.optionals prev.stdenv.hostPlatform.isMusl [
         "test_scheduler_mix"
       ];
@@ -351,53 +465,57 @@ in
   basu = prev.basu.overrideAttrs (old: {
     nativeBuildInputs = builtins.filter (x: x != prev.getent) old.nativeBuildInputs;
 
-    postPatch = (old.postPatch or [ ]) ++ [
-      ''
-        substituteInPlace meson.build \
-        --replace-fail \
-          "        getent_result = run_command('getent', 'passwd', '65534')" \
-          "        getent_result = run_command('false')"
-      ''
-    ];
+    postPatch =
+      (old.postPatch or [])
+      ++ [
+        ''
+          substituteInPlace meson.build \
+          --replace-fail \
+            "        getent_result = run_command('getent', 'passwd', '65534')" \
+            "        getent_result = run_command('false')"
+        ''
+      ];
   });
 
   serd = prev.serd.overrideAttrs (old: {
     outputs = builtins.filter (
       output:
-      !builtins.elem output [
-        "doc"
-        "man"
-      ]
-    ) (old.outputs or [ ]);
+        !builtins.elem output [
+          "doc"
+          "man"
+        ]
+    ) (old.outputs or []);
 
-    postPatch = (old.postPatch or "") + ''
-      substituteInPlace meson.build \
-        --replace-fail \
-          "subdir('doc')" \
-          "# subdir('doc')"
-    '';
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        substituteInPlace meson.build \
+          --replace-fail \
+            "subdir('doc')" \
+            "# subdir('doc')"
+      '';
 
     nativeBuildInputs = builtins.filter (
       p:
-      !builtins.elem (prev.lib.getName p) [
-        "doxygen"
-        "mandoc"
-        "sphinx"
-        "sphinxygen"
-      ]
-    ) (old.nativeBuildInputs or [ ]);
+        !builtins.elem (prev.lib.getName p) [
+          "doxygen"
+          "mandoc"
+          "sphinx"
+          "sphinxygen"
+        ]
+    ) (old.nativeBuildInputs or []);
   });
 
   libtiff = prev.libtiff.overrideAttrs (old: {
-    nativeBuildInputs = builtins.filter (p: p != prev.sphinx) (old.nativeBuildInputs or [ ]);
+    nativeBuildInputs = builtins.filter (p: p != prev.sphinx) (old.nativeBuildInputs or []);
 
     outputs = builtins.filter (
       output:
-      !builtins.elem output [
-        "doc"
-        "man"
-      ]
-    ) (old.outputs or [ ]);
+        !builtins.elem output [
+          "doc"
+          "man"
+        ]
+    ) (old.outputs or []);
   });
 
   elfutils = prev.elfutils.override {
@@ -426,39 +544,45 @@ in
   };
 
   oo7-server = prev.oo7-server.overrideAttrs (old: {
-    env = (old.env or { }) // {
-      CARGO_PROFILE_RELEASE_OPT_LEVEL = "z";
-      CARGO_PROFILE_RELEASE_LTO = "thin";
-      CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1";
-    };
+    env =
+      (old.env or {})
+      // {
+        CARGO_PROFILE_RELEASE_OPT_LEVEL = "z";
+        CARGO_PROFILE_RELEASE_LTO = "thin";
+        CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1";
+      };
   });
 
   oo7-portal = prev.oo7-portal.overrideAttrs (old: {
-    env = (old.env or { }) // {
-      CARGO_PROFILE_RELEASE_OPT_LEVEL = "z";
-      CARGO_PROFILE_RELEASE_LTO = "thin";
-      CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1";
-    };
+    env =
+      (old.env or {})
+      // {
+        CARGO_PROFILE_RELEASE_OPT_LEVEL = "z";
+        CARGO_PROFILE_RELEASE_LTO = "thin";
+        CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1";
+      };
   });
 
   mako =
     (prev.mako.override {
       systemdMinimal = final.basu;
     }).overrideAttrs
-      {
-        mesonFlags = [ "-Dsd-bus-provider=basu" ];
-      };
+    {
+      mesonFlags = ["-Dsd-bus-provider=basu"];
+    };
 
   libgudev =
     (prev.libgudev.override {
       udev = prev.libudev-zero;
     }).overrideAttrs
-      (old: {
-        doCheck = false;
-        mesonFlags = builtins.filter (p: !prev.lib.hasPrefix "-Dtests=" p) (old.mesonFlags or [ ]) ++ [
+    (old: {
+      doCheck = false;
+      mesonFlags =
+        builtins.filter (p: !prev.lib.hasPrefix "-Dtests=" p) (old.mesonFlags or [])
+        ++ [
           "-Dtests=disabled"
         ];
-      });
+    });
 
   seatd = prev.seatd.override {
     systemdSupport = false;
@@ -468,20 +592,25 @@ in
     udev = prev.libudev-zero;
   };
 
+  libva = prev.libva.override {
+    minimal = true;
+  };
+
   libcamera = libcameraBase.overrideAttrs (old: {
     nativeBuildInputs = builtins.filter (
-      p:
-      let
+      p: let
         name = prev.lib.getName p;
       in
-      name != "sphinx" && name != "graphviz" && name != "doxygen"
-    ) (old.nativeBuildInputs or [ ]);
+        name != "sphinx" && name != "graphviz" && name != "doxygen"
+    ) (old.nativeBuildInputs or []);
 
-    mesonFlags = (old.mesonFlags or [ ]) ++ [
-      "-Dpycamera=disabled"
-    ];
+    mesonFlags =
+      (old.mesonFlags or [])
+      ++ [
+        "-Dpycamera=disabled"
+      ];
 
-    buildInputs = builtins.filter (p: prev.lib.getName p != "pybind11") (old.buildInputs or [ ]);
+    buildInputs = builtins.filter (p: prev.lib.getName p != "pybind11") (old.buildInputs or []);
   });
 
   libinput = prev.libinput.override {
@@ -494,7 +623,7 @@ in
   };
 
   greetd = prev.greetd.overrideAttrs (old: {
-    nativeBuildInputs = builtins.filter (p: p != prev.scdoc) (old.nativeBuildInputs or [ ]);
+    nativeBuildInputs = builtins.filter (p: p != prev.scdoc) (old.nativeBuildInputs or []);
     postInstall = "";
   });
 
@@ -508,15 +637,30 @@ in
     withSystemd = false;
   };
 
-  at-spi2-core = prev.at-spi2-core.override {
-    systemdSupport = false;
-  };
+  at-spi2-core =
+    (prev.at-spi2-core.override {
+      systemdSupport = false;
+    }).overrideAttrs (old: {
+      buildInputs = builtins.filter (
+        p:
+          !(builtins.elem (prev.lib.getName p) [
+            "libx11"
+            "libxtst"
+            "libxi"
+            "libxext"
+          ])
+      ) (old.buildInputs or []);
+
+      mesonFlags = (old.mesonFlags or []) ++ ["-Dx11=disabled"];
+    });
 
   libepoxy = prev.libepoxy.overrideAttrs (old: {
-    buildInputs = (old.buildInputs or [ ]) ++ [ prev.libGL ];
-    mesonFlags = builtins.filter (p: !(prev.lib.hasPrefix "-Degl=" p)) (old.mesonFlags or [ ]) ++ [
-      "-Degl=yes"
-    ];
+    buildInputs = (old.buildInputs or []) ++ [final.libGL];
+    mesonFlags =
+      builtins.filter (p: !(prev.lib.hasPrefix "-Degl=" p)) (old.mesonFlags or [])
+      ++ [
+        "-Degl=yes"
+      ];
   });
 
   gtk3 = prev.gtk3.override {
@@ -542,28 +686,31 @@ in
       perlSupport = false;
       rustSupport = false;
       withpcre2 = false;
-      curl = if prev.stdenv.hostPlatform.isFreeBSD then prev.curlMinimal else prev.curl;
+      curl =
+        if prev.stdenv.hostPlatform.isFreeBSD
+        then prev.curlMinimal
+        else prev.curl;
     }).overrideAttrs
-      (old: {
-        doInstallCheck = false;
+    (old: {
+      doInstallCheck = false;
 
-        postPatch =
-          (old.postPatch or "")
-          + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
-            substituteInPlace git-sh-i18n.sh \
-              --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
-              --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
-          '';
-      });
+      postPatch =
+        (old.postPatch or "")
+        + prev.lib.optionalString prev.stdenv.hostPlatform.isMusl ''
+          substituteInPlace git-sh-i18n.sh \
+            --replace-fail '${prev.gettext}/bin/gettext.sh' 'gettext.sh' \
+            --replace-fail 'export PATH=${prev.gettext}/bin:$PATH' ':'
+        '';
+    });
 
   polkit =
     (prev.polkit.override {
       useSystemd = false;
       useConsoleKit = true;
     }).overrideAttrs
-      (old: {
-        buildInputs = builtins.filter (p: p != prev.elogind) (old.buildInputs or [ ]);
-      });
+    (old: {
+      buildInputs = builtins.filter (p: p != prev.elogind) (old.buildInputs or []);
+    });
 
   libcanberra = mkCanberra prev.libcanberra;
   libcanberra-gtk3 = mkCanberra prev.libcanberra-gtk3;
@@ -572,16 +719,16 @@ in
     (prev.xdg-desktop-portal-wlr.override {
       systemdLibs = final.basu;
     }).overrideAttrs
-      (old: {
-        mesonFlags =
-          builtins.filter (
-            p: !(prev.lib.hasPrefix "-Dsd-bus-provider=" p) && !(prev.lib.hasPrefix "-Dsystemd=" p)
-          ) (old.mesonFlags or [ ])
-          ++ [
-            "-Dsd-bus-provider=basu"
-            "-Dsystemd=disabled"
-          ];
-      });
+    (old: {
+      mesonFlags =
+        builtins.filter (
+          p: !(prev.lib.hasPrefix "-Dsd-bus-provider=" p) && !(prev.lib.hasPrefix "-Dsystemd=" p)
+        ) (old.mesonFlags or [])
+        ++ [
+          "-Dsd-bus-provider=basu"
+          "-Dsystemd=disabled"
+        ];
+    });
 
   bluez = prev.bluez.override {
     udev = prev.libudev-zero;
@@ -591,26 +738,28 @@ in
     (prev.xdg-desktop-portal-termfilechooser.override {
       systemdLibs = final.basu;
     }).overrideAttrs
-      (old: {
-        mesonFlags =
-          builtins.filter (
-            p: !(prev.lib.hasPrefix "-Dsd-bus-provider=" p) && !(prev.lib.hasPrefix "-Dsystemd=" p)
-          ) (old.mesonFlags or [ ])
-          ++ [
-            "-Dsd-bus-provider=basu"
-            "-Dsystemd=disabled"
-          ];
-      });
+    (old: {
+      mesonFlags =
+        builtins.filter (
+          p: !(prev.lib.hasPrefix "-Dsd-bus-provider=" p) && !(prev.lib.hasPrefix "-Dsystemd=" p)
+        ) (old.mesonFlags or [])
+        ++ [
+          "-Dsd-bus-provider=basu"
+          "-Dsystemd=disabled"
+        ];
+    });
 
   rtkit =
     (prev.rtkit.override {
       systemdLibs = final.basu;
     }).overrideAttrs
-      (old: {
-        mesonFlags = (old.mesonFlags or [ ]) ++ [
+    (old: {
+      mesonFlags =
+        (old.mesonFlags or [])
+        ++ [
           (prev.lib.mesonEnable "libsystemd" false)
         ];
-      });
+    });
 
   util-linux = prev.util-linux.override {
     systemdSupport = false;
@@ -618,10 +767,11 @@ in
 
   dbus = prev.dbus.override {
     enableSystemd = false;
+    x11Support = false;
   };
 
   xwayland = prev.xwayland.overrideAttrs (old: {
-    buildInputs = builtins.filter (p: p != prev.systemd) (old.buildInputs or [ ]);
+    buildInputs = builtins.filter (p: p != prev.systemd) (old.buildInputs or []);
   });
 
   wireplumber =
@@ -630,93 +780,106 @@ in
       enableGI = false;
       pipewire = final.pipewire;
     }).overrideAttrs
-      (old: {
-        postPatch = (old.postPatch or "") + ''
+    (old: {
+      postPatch =
+        (old.postPatch or "")
+        + ''
           substituteInPlace po/meson.build \
             --replace-fail \
               "python_po = pymod.find_installation('python3')" \
               "python_po = pymod.find_installation('python3', required: false)"
         '';
 
-        buildInputs = builtins.filter (p: p != prev.systemdLibs) (old.buildInputs or [ ]);
+      buildInputs = builtins.filter (p: p != prev.systemdLibs) (old.buildInputs or []);
 
-        mesonFlags =
-          (builtins.filter (
-            flag:
+      mesonFlags =
+        (builtins.filter (
+          flag:
             !prev.lib.hasPrefix "-Dsystemd=" flag
             && !prev.lib.hasPrefix "-Dsystemd-system-service=" flag
             && !prev.lib.hasPrefix "-Dsystemd-system-unit-dir=" flag
-          ) (old.mesonFlags or [ ]))
-          ++ [
-            "-Dsystemd-system-service=false"
-            "-Dsystemd=disabled"
-          ];
-      });
+        ) (old.mesonFlags or []))
+        ++ [
+          "-Dsystemd-system-service=false"
+          "-Dsystemd=disabled"
+        ];
+    });
 
   xdg-desktop-portal =
     (prev.xdg-desktop-portal.override {
       enableGeoLocation = false;
       enableSystemd = false;
     }).overrideAttrs
-      (old: {
-        doCheck = false;
+    (old: {
+      doCheck = false;
 
-        buildInputs = builtins.filter (dep: prev.lib.getName dep != "flatpak") (old.buildInputs or [ ]);
+      buildInputs = builtins.filter (dep: prev.lib.getName dep != "flatpak") (old.buildInputs or []);
 
-        mesonFlags = (old.mesonFlags or [ ]) ++ [
+      mesonFlags =
+        (old.mesonFlags or [])
+        ++ [
           "-Dflatpak-interfaces=disabled"
         ];
-      });
+    });
 
   firefox-unwrapped =
     (prev.firefox-unwrapped.override {
-      pkgsCross = prev.pkgsCross // {
-        # glibc, no overlays.
-        wasm32-wasip1 = (import prev.path { localSystem = "aarch64-linux"; }).pkgsCross.wasm32-wasip1;
-      };
+      pkgsCross =
+        prev.pkgsCross
+        // {
+          # glibc, no overlays.
+          wasm32-wasip1 = (import prev.path {localSystem = "aarch64-linux";}).pkgsCross.wasm32-wasip1;
+        };
       enablePGO = false;
       enableDebugSymbols = false;
       enableLTO = false;
+      nspr = nsprAarchFix;
+      nss_latest = nssFixed;
     }).overrideAttrs
-      (old: {
-        patches = (old.patches or [ ]) ++ [
+    (old: {
+      patches =
+        (old.patches or [])
+        ++ [
           (prev.fetchpatch {
             name = "audio-thread-priority-musl-pthread_t.patch";
             url = "https://github.com/padenot/audio_thread_priority/commit/9c37971cf57f9b6bab44a247ebc7f610cf8186bd.patch";
             stripLen = 1;
             extraPrefix = "third_party/rust/audio_thread_priority/";
-            excludes = [ ".github/*" ];
+            excludes = [".github/*"];
             hash = "sha256-ab9o5n72F78iM1io+OelLnajSMVpZ1bb65Sj2OAJmsE=";
           })
         ];
 
-        configureFlags =
-          builtins.filter (
-            p:
+      configureFlags =
+        builtins.filter (
+          p:
             !(prev.lib.hasPrefix "--with-onnx-runtime=" p)
-            #   && !(prev.lib.hasPrefix "--with-wasi-sysroot=" p)
             && !(prev.lib.hasPrefix "--enable-default-toolkit=" p)
-          ) (old.configureFlags or [ ])
-          ++ [
-            "--without-onnx-runtime"
-            #    "--without-wasm-sandboxed-libraries"
-            "--enable-default-toolkit=cairo-gtk3-wayland-only"
-          ];
+        ) (old.configureFlags or [])
+        ++ [
+          "--without-onnx-runtime"
+          #    "--without-wasm-sandboxed-libraries"
+          "--enable-default-toolkit=cairo-gtk3-wayland-only"
+        ];
 
-        postPatch = (old.postPatch or "") + ''
+      postPatch =
+        (old.postPatch or "")
+        + ''
           sed -i '1i #include <cstdint>' third_party/parakeet.cpp/src/backend.hpp
           sed -i 's/\("files":{\)[^}]*/\1/' \
             third_party/rust/audio_thread_priority/.cargo-checksum.json
             sed -i '/#include <linux\/prctl.h>/d' \
               third_party/libwebrtc/rtc_base/platform_thread_types.cc
         '';
-      });
+    });
 
   scenefx = prev.scenefx.overrideAttrs (old: {
-    postPatch = (old.postPatch or "") + ''
-      find include -name clipped_region.h -print -exec \
-        sed -i 's/__always_inline/inline __attribute__((always_inline))/g' {} +
-    '';
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        find include -name clipped_region.h -print -exec \
+          sed -i 's/__always_inline/inline __attribute__((always_inline))/g' {} +
+      '';
   });
 
   pipewire =
@@ -732,30 +895,35 @@ in
       udev = prev.libudev-zero;
       libdrm = final.libdrm;
     }).overrideAttrs
-      (old: {
-        doCheck = false;
+    (old: {
+      doCheck = false;
 
-        patches = (old.patches or [ ]) ++ [ ../../patches/pipewire-libudev_zero.patch ];
+      patches = (old.patches or []) ++ [../../patches/pipewire-libudev_zero.patch];
 
-        buildInputs = builtins.filter (
-          p: p != prev.modemmanager && p != prev.elogind && p != prev.libcamera
-        ) (old.buildInputs or [ ]);
+      buildInputs = builtins.filter (
+        p:
+          !(builtins.elem (prev.lib.getName p) [
+            "modemmanager"
+            "elogind"
+            "libcamera"
+          ])
+      ) (old.buildInputs or []);
 
-        nativeBuildInputs = builtins.filter (
-          p:
-          if prev.lib.isDerivation p then
+      nativeBuildInputs = builtins.filter (
+        p:
+          if prev.lib.isDerivation p
+          then
             !(builtins.elem (prev.lib.getName p) [
               "docutils"
               "doxygen"
               "graphviz"
             ])
-          else
-            true
-        ) (old.nativeBuildInputs or [ ]);
+          else true
+      ) (old.nativeBuildInputs or []);
 
-        mesonFlags =
-          (builtins.filter (
-            flag:
+      mesonFlags =
+        (builtins.filter (
+          flag:
             !prev.lib.hasPrefix "-Ddocs=" flag
             && !prev.lib.hasPrefix "-Dinstalled_tests=" flag
             && !prev.lib.hasPrefix "-Dman=" flag
@@ -763,26 +931,26 @@ in
             && !prev.lib.hasPrefix "-Dbluez5-backend-native-mm=" flag
             && !prev.lib.hasPrefix "-Dlogind=" flag
             && !prev.lib.hasPrefix "-Dlibcamera=" flag
-          ) (old.mesonFlags or [ ]))
-          ++ [
-            "-Ddocs=disabled"
-            "-Dinstalled_tests=disabled"
-            "-Dman=disabled"
-            "-Dlogind=disabled"
-            "-Dbluez5-backend-native-mm=disabled"
-            "-Dlogind=disabled"
-            "-Dlibcamera=disabled"
-          ];
+        ) (old.mesonFlags or []))
+        ++ [
+          "-Ddocs=disabled"
+          "-Dinstalled_tests=disabled"
+          "-Dman=disabled"
+          "-Dlogind=disabled"
+          "-Dbluez5-backend-native-mm=disabled"
+          "-Dlogind=disabled"
+          "-Dlibcamera=disabled"
+        ];
 
-        outputs = builtins.filter (
-          output:
+      outputs = builtins.filter (
+        output:
           !builtins.elem output [
             "doc"
             "man"
             "installedTests"
           ]
-        ) (old.outputs or [ ]);
-      });
+      ) (old.outputs or []);
+    });
 
   ffmpeg-headless =
     (prev.ffmpeg.override {
@@ -801,7 +969,7 @@ in
       withNpp = false;
       withMfx = false;
       withVpl = false;
-      withVaapi = false;
+      withVaapi = true;
       withVdpau = false;
 
       # Disable GUI/display integration.
@@ -821,10 +989,10 @@ in
       withTxtDoc = false;
       withDoc = false;
     }).overrideAttrs
-      (_: {
-        doCheck = false;
-        doInstallCheck = false;
-      });
+    (_: {
+      doCheck = false;
+      doInstallCheck = false;
+    });
 
   noto-fonts-color-emoji = final.stdenvNoCC.mkDerivation {
     pname = "noto-fonts-color-emoji";
@@ -850,14 +1018,16 @@ in
   };
 
   xdg-desktop-portal-gtk = prev.xdg-desktop-portal-gtk.overrideAttrs (old: {
-    mesonFlags = (old.mesonFlags or [ ]) ++ [
-      "-Dwallpaper=disabled"
-      "-Dlockdown=disabled"
-    ];
+    mesonFlags =
+      (old.mesonFlags or [])
+      ++ [
+        "-Dwallpaper=disabled"
+        "-Dlockdown=disabled"
+      ];
 
     buildInputs =
       builtins.filter (p: p != prev.gnome-desktop && prev.lib.getName p != "gnome-settings-daemon") (
-        old.buildInputs or [ ]
+        old.buildInputs or []
       )
       ++ [
         gsdSchemas
@@ -885,57 +1055,66 @@ in
     #  stripTests = true;
   };
 
-  writeShellScript =
-    name: text:
+  writeShellScript = name: text:
     prev.writeScript name ''
       #!${final.bashNonInteractive}/bin/bash
       ${text}
     '';
 
   linux-firmware = prev.linux-firmware.overrideAttrs (old: {
-    postInstall = (old.postInstall or "") + ''
-            rm -rf \
-              $out/lib/firmware/amdgpu \
-              $out/lib/firmware/radeon \
-              $out/lib/firmware/nvidia \
-              $out/lib/firmware/i915 \
-              $out/lib/firmware/intel \
-              $out/lib/firmware/mediatek \
-              $out/lib/firmware/ath10k \
-              $out/lib/firmware/ath11k \
-              $out/lib/firmware/ath12k \
-              $out/lib/firmware/ath9k_htc \
-              $out/lib/firmware/mrvl \
-              $out/lib/firmware/rtlwifi \
-              $out/lib/firmware/rtw88 \
-              $out/lib/firmware/rtw89 \
-              $out/lib/firmware/ti-connectivity \
-              $out/lib/firmware/qcom \
-        	$out/lib/firmware/mellanox \
-              $out/lib/firmware/microchip \
-      	$out/lib/firmware/cavium \
-              $out/lib/firmware/netronome \
-              $out/lib/firmware/qed \
-              $out/lib/firmware/liquidio \
-              $out/lib/firmware/inside-secure \
-              $out/lib/firmware/ueagle-atm \
-              $out/lib/firmware/av7110 \
-              $out/lib/firmware/cirrus \
-              $out/lib/firmware/sof
+    postInstall =
+      (old.postInstall or "")
+      + ''
+             rm -rf \
+               $out/lib/firmware/amdgpu \
+               $out/lib/firmware/radeon \
+               $out/lib/firmware/nvidia \
+               $out/lib/firmware/i915 \
+               $out/lib/firmware/intel \
+               $out/lib/firmware/mediatek \
+               $out/lib/firmware/ath10k \
+               $out/lib/firmware/ath11k \
+               $out/lib/firmware/ath12k \
+               $out/lib/firmware/ath9k_htc \
+               $out/lib/firmware/mrvl \
+               $out/lib/firmware/rtlwifi \
+               $out/lib/firmware/rtw88 \
+               $out/lib/firmware/rtw89 \
+               $out/lib/firmware/ti-connectivity \
+               $out/lib/firmware/qcom \
+         	$out/lib/firmware/mellanox \
+               $out/lib/firmware/microchip \
+        $out/lib/firmware/cavium \
+               $out/lib/firmware/netronome \
+               $out/lib/firmware/qed \
+               $out/lib/firmware/liquidio \
+               $out/lib/firmware/inside-secure \
+               $out/lib/firmware/ueagle-atm \
+               $out/lib/firmware/av7110 \
+               $out/lib/firmware/cirrus \
+               $out/lib/firmware/sof \
+               $out/lib/firmware/dell \
+               $out/lib/firmware/lenovo \
+               $out/lib/firmware/amdnpu \
+               $out/lib/firmware/ql2900 \
+               $out/lib/firmware/xe \
+               $out/lib/firmware/ti \
+               $out/lib/firmware/rtl_bt \
+               $out/lib/firmware/dsp56k
 
-            rm -f $out/lib/firmware/iwlwifi-*
+             rm -f $out/lib/firmware/iwlwifi-*
 
-            # Removing firmware families can leave WHENCE-generated symlinks
-            # pointing at deleted targets.
-            find -L $out/lib/firmware -type l -delete
-            find $out/lib/firmware -type d -empty -delete
-    '';
+             # Removing firmware families can leave WHENCE-generated symlinks
+             # pointing at deleted targets.
+             find -L $out/lib/firmware -type l -delete
+             find $out/lib/firmware -type d -empty -delete
+      '';
   });
 
   nh-unwrapped = prev.nh-unwrapped.overrideAttrs (old: {
     doCheck = false;
     doInstallCheck = false;
-    nativeCheckInputs = [ ];
+    nativeCheckInputs = [];
   });
 
   handlr-regex = prev.handlr-regex.overrideAttrs (old: {
