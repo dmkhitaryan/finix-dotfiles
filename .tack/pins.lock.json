@@ -3,40 +3,40 @@
     "type": "github",
     "owner": "finix-community",
     "repo": "finix",
-    "rev": "9fafdc3f091e963585a0dd4df028d58c2d66d815",
-    "narHash": "sha256-ftxhTlFuBHQcXhztoiVQSkQ1aW3j28sZNSosINkZBXk=",
-    "lastModified": 1791396781
+    "rev": "58c886c9a24d360f3acc51df6e316a2696240223",
+    "narHash": "sha256-+mTcB6uxMLY45h+iAOy+9Pd3uWkThr76FY1fQylcXWc=",
+    "lastModified": 1792448191
   },
   "finix-community": {
     "type": "github",
     "owner": "finix-community",
     "repo": "community-modules",
-    "rev": "a7044553cb714c295f238cbbed5692ddce6a2af6",
-    "narHash": "sha256-5cwpBTWagVd9olx6HmnYoaZFqh0JFTWh5lCzKJFFlU4=",
-    "lastModified": 1791086804
+    "rev": "a23be2c6a777fc0be1a0a857f6a5296db1eb054a",
+    "narHash": "sha256-6gcFYf4BFHaApP+sB7N4alek0CJ+opNYBDNyl5MFQfE=",
+    "lastModified": 1791743568
   },
   "finix-test": {
     "type": "github",
     "owner": "dmkhitaryan",
     "repo": "finix",
-    "rev": "b625adc205813766946812fea7a36ea89f765458",
-    "narHash": "sha256-+74QWM8gv1oc/2MRxWNAeVBFqKv2hj2Stis4+lbl1rQ=",
-    "lastModified": 1791358857
+    "rev": "3b069d3063c89880c62537d6c3e3765c889abcf1",
+    "narHash": "sha256-8zh/Y8RQeyOCdpUZd5d08A/vXKZVpJLMczSFpTLFk+g=",
+    "lastModified": 1792103767
   },
   "nh": {
     "type": "github",
     "owner": "nix-community",
     "repo": "nh",
-    "rev": "d9192c1521a067eeaa5669964fb8ae7816d4787c",
-    "narHash": "sha256-TR8TU/84v1+AX9+zTnaTbpPxsuPGsIpl3fymPkpACM8=",
-    "lastModified": 1791542982
+    "rev": "697d99b771fc0eb3dccbdefeacabfcc5e3091955",
+    "narHash": "sha256-/xR4SGAtkr4Au5O0U7izaVsrovgUANdRHxRUAE59pJs=",
+    "lastModified": 1792446434
   },
   "nixpkgs": {
     "type": "github",
     "owner": "NixOS",
     "repo": "nixpkgs",
-    "rev": "e7439b6b14ad3cc35d05608ebca9bce01a25f5f8",
-    "narHash": "sha256-H83yz/do+hjOO0uujHyH8RgtIQP2v7Mw+cLwcZK/xKc=",
-    "lastModified": 1791456040
+    "rev": "fe13242281a67641c0102cdb1087f0ebe586c7df",
+    "narHash": "sha256-zp8ToDMnqZcu4o4IH9pdwXFXGp7yLm/M0dEnNWnyd7I=",
+    "lastModified": 1792094642
   }
 }
