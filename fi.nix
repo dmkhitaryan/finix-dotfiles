@@ -25,11 +25,11 @@ let
             then {
               replaceStdenv = {pkgs}: let
                 clangCC = pkgs.clangStdenv.cc;
+                # TODO: un-hardcode use of Apple CPU?
                 rustHook = ''
                   case "''${pname:-}" in
                     rustc | rustc-unwrapped)
                       # nix-wrapped clang's hardening flags break rustc's wasm32 parts.
-                      # TODO: un-hardcode use of Apple CPU?
                       export NIX_HARDENING_ENABLE="''${NIX_HARDENING_ENABLE//zerocallusedregs/}"
                       ;;
                     *)
