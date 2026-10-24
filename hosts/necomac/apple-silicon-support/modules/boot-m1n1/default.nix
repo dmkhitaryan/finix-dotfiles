@@ -3,28 +3,29 @@
   pkgs,
   lib,
   ...
-}:
-let
+}: let
   pkgs' = config.hardware.asahi.pkgs;
 
   bootM1n1 =
     (pkgs'.m1n1.override {
       customLogo = config.boot.m1n1CustomLogo;
     }).overrideAttrs
-      (old: {
-        doCheck = false;
+    (old: {
+      doCheck = false;
 
-        nativeBuildInputs = builtins.filter (
-          p: config.boot.m1n1CustomLogo != null || p != pkgs.imagemagick
-        ) old.nativeBuildInputs;
-      });
+      nativeBuildInputs =
+        builtins.filter (
+          p: config.boot.m1n1CustomLogo != null || lib.getName p != "imagemagick"
+        )
+        old.nativeBuildInputs;
+    });
 
   bootUBoot = pkgs'.uboot-asahi.override {
     m1n1 = bootM1n1;
   };
 
   bootFiles = {
-    "m1n1/boot.bin" = pkgs.runCommand "boot.bin" { } ''
+    "m1n1/boot.bin" = pkgs.runCommand "boot.bin" {} ''
       cat ${bootM1n1}/lib/m1n1/m1n1.bin \
           ${config.boot.kernelPackages.kernel}/dtbs/apple/*.dtb \
           ${bootUBoot}/u-boot-nodtb.bin.gz \
@@ -34,8 +35,7 @@ let
       fi
     '';
   };
-in
-{
+in {
   config = lib.mkIf config.hardware.asahi.enable {
     # install m1n1 with the boot loader
     programs.limine.additionalFiles = bootFiles;
