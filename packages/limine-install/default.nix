@@ -28,6 +28,7 @@
       ]
     }
     esp=${esp}
+    mountpoint -q "$esp" || { echo "limine: $esp is not mounted, aborting" >&2; exit 1; }
     keep=${toString keep}
     profiles=/nix/var/nix/profiles
     kdir=$esp/limine/kernels
