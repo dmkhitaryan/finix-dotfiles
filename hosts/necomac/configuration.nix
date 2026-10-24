@@ -18,6 +18,19 @@
   endcord = pkgs.callPackage ../../packages/endcord {};
   makoCustom = pkgs.callPackage ../../packages/mako {};
 
+  # The nixpkgs source path as plain text: no closure dependency.
+  # Kept alive by the gcroot rule below instead.
+  nixpkgsSrc = builtins.unsafeDiscardStringContext "${sources.nixpkgs}";
+
+  nnn-foot = pkgs.makeDesktopItem {
+    name = "nnn-foot";
+    desktopName = "nnn (foot)";
+    exec = "foot -T nnn nnn %f";
+    terminal = false;
+    mimeTypes = ["inode/directory"];
+    noDisplay = true;
+  };
+
   xdg-open = pkgs.writeScriptBin "xdg-open" ''
     #!${pkgs.busybox}/bin/ash
 
@@ -58,10 +71,8 @@
           };
 
           to = {
-            type = "github";
-            owner = "NixOS";
-            repo = "nixpkgs";
-            rev = sources.nixpkgs.rev;
+            type = "path";
+            path = nixpkgsSrc;
           };
         }
       ];
@@ -388,6 +399,10 @@ in {
 
   finit.tmpfiles.rules = [
     "d /var/lib/lastlog 0755 - - -"
+    "d /nix/var/nix/builds 0755 root root - -"
+    # GC root for the nixpkgs source this system was evaluated from.
+    # This way we don't add it to closure explicitly, and won't delete accidentally!
+    "L+ /nix/var/nix/gcroots/nixpkgs-source - - - - ${nixpkgsSrc}"
   ];
 
   finit.tasks.battery-charge-limit = {
@@ -424,6 +439,8 @@ in {
       auto-optimise-store = true;
       connect-timeout = 5;
       fallback = true;
+      keep-outputs = true;
+      build-dir = "/nix/var/nix/builds";
       flake-registry = flakeRegistry;
       experimental-features = [
         "nix-command"
@@ -431,6 +448,8 @@ in {
       ];
       max-jobs = 2;
       cores = 4;
+      log-lines = 75;
+      max-silent-time = 3600;
       nix-path = "";
       trusted-users = [
         "root"
@@ -487,6 +506,11 @@ in {
     {
       name = "apple-use-pmp";
       patch = ../../patches/apple-use-pmp.patch;
+    }
+
+    {
+      name = "necomac-builtin";
+      patch = ../../patches/necomac-builtin.patch;
     }
   ];
   boot.initrd.kernelModules = [
@@ -773,6 +797,7 @@ in {
   security.pam.environment.NIX_PATH.default = "nixpkgs=flake:nixpkgs";
   security.pam.environment.NH_NOM.default = "no";
   security.pam.environment.MOZ_DISABLE_RDD_SANDBOX.default = "1";
+  security.pam.environment.GC_INITIAL_HEAP_SIZE.default = "4G";
 
   security.wrappers.oo7-daemon = {
     owner = "root";
@@ -875,6 +900,7 @@ in {
     lsp-plugins
     swaybg
     dconf
+    nnn-foot
     nh-unwrapped
     playerctl
     tree
