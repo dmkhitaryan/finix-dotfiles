@@ -4,13 +4,10 @@
   linuxPackagesFor,
   _kernelPatches ? [],
   stdenv,
-  useWildLinker,
   overrideCC,
   llvmPackages,
 } @ args: let
-  clangStdenv = overrideCC stdenv (llvmPackages.clang.override {
-    inherit (llvmPackages) bintools;
-  });
+  clangStdenv = overrideCC stdenv (stdenv.cc.override (_: {extraBuildCommands = "";}));
   extraArgs =
     lib.removeAttrs args [
       "lib"
@@ -22,7 +19,6 @@
     ]
     // {stdenv = clangStdenv;};
 
-  wildStdenv = useWildLinker stdenv;
   linux-asahi-pkg = {
     lib,
     fetchFromGitHub,
@@ -31,23 +27,24 @@
   }:
     buildLinux (
       lib.recursiveUpdate rec {
-        inherit wildStdenv lib;
+        inherit lib;
 
         pname = "linux-asahi";
-        version = "7.1.13";
+        version = "7.2.12";
         modDirVersion = version;
         extraMeta.branch = "7.0";
 
         src = fetchFromGitHub {
           owner = "AsahiLinux";
           repo = "linux";
-          tag = "asahi-${version}-3";
-          hash = "sha256-quvdcQ2LbYQyCDQFKc6KPjWv+f5fpWfUrXo5Id0kpwE=";
+          tag = "asahi-${version}-2";
+          hash = "sha256-SswEGjPYVsROWsn/g4Vnz1Q2arZCfCyo8mlRR8MSYj8=";
         };
 
         ignoreConfigErrors = false;
         # Only build what defconfig, common-config and the options below enable.
         autoModules = false;
+        defconfig = "defconfig necomac.config";
         extraMakeFlags = ["LLVM_LINK=${llvmPackages.llvm}/bin/llvm-link"];
 
         kernelPatches =
@@ -78,7 +75,7 @@
 
                 # Apple SoC drivers, set explicitly so they survive autoModules = false.
                 APPLE_DART = yes;
-                APPLE_SART = module;
+                APPLE_SART = yes;
                 APPLE_SIO = module;
                 APPLE_ADMAC = module;
                 ARM_APPLE_SOC_CPUFREQ = module;
@@ -92,7 +89,7 @@
                 I2C_APPLE = module;
                 PCIE_APPLE = module;
                 PHY_APPLE_ATC = module;
-                NVME_APPLE = module;
+                NVME_APPLE = yes;
                 DRM_APPLE = module;
                 # Display crossbar lives behind the generic mux menu.
                 MUX_CORE = yes;
@@ -146,8 +143,8 @@
                 CRYPTO_MD5 = module;
                 CRYPTO_DES = module;
                 CRYPTO_ECDH = module;
-                CRYPTO_SHA3 = module;
-                CRYPTO_SHA512 = module;
+                #CRYPTO_SHA3 = module;
+                #CRYPTO_SHA512 = module;
 
                 # FUSE and VFAT codepages.
                 FUSE_FS = module;
@@ -232,12 +229,8 @@
                 DEBUG_MEMORY_INIT = no;
 
                 # Wrong Broadcom Wi-Fi implementations.
-                B43 = no;
-                B43LEGACY = no;
-                BRCMSMAC = no;
 
                 # Completely irrelevant buses/features.
-                FSL_MC_BUS = no;
                 WAN = lib.mkForce no;
                 SPEAKUP = no;
 
@@ -261,11 +254,9 @@
                 FB_PM2 = no;
                 FB_PM3 = no;
                 FB_CIRRUS = no;
-                FB_IMX = no;
                 FB_CYBER2000 = no;
                 FB_UVESA = no;
                 FB_OPENCORES = no;
-                FB_XILINX = no;
                 FB_TFT = no;
 
                 ARCH_SUNXI = no;
@@ -291,7 +282,6 @@
                 OCFS2_FS = no;
                 BTRFS_FS = no;
                 F2FS_FS = lib.mkForce no;
-                VBOXSF_FS = no;
                 CEPH_FS = no;
 
                 APPLE_MAILBOX = yes;
@@ -301,18 +291,14 @@
                 ATA = no;
                 SCSI_LOWLEVEL = lib.mkForce no;
                 SCSI = yes;
-                NVME_FABRICS = no;
                 NVME_TARGET = lib.mkForce no;
                 MAC80211 = no;
-                DVB_CORE = no;
 
-                NVME_RDMA = no;
                 NVME_FC = no;
                 NVME_TCP = no;
 
                 # No built-in Ethernet controller.
                 NET_VENDOR_3COM = no;
-                NET_VENDOR_ACTIONS = no;
                 NET_VENDOR_ADAPTEC = no;
                 NET_VENDOR_AGERE = no;
                 NET_VENDOR_ALACRITECH = no;
@@ -340,7 +326,6 @@
                 NET_VENDOR_ADI = no;
                 NET_VENDOR_LITEX = no;
                 NET_VENDOR_MARVELL = no;
-                NET_VENDOR_MEDIATEK = lib.mkForce no;
                 NET_VENDOR_MELLANOX = no;
                 NET_VENDOR_META = no;
                 NET_VENDOR_MICREL = no;
@@ -352,7 +337,6 @@
                 NET_VENDOR_NI = no;
                 NET_VENDOR_NATSEMI = no;
                 NET_VENDOR_NETRONOME = no;
-                NET_VENDOR_8390 = no;
                 NET_VENDOR_OKI = no;
                 NET_VENDOR_PENSANDO = no;
                 NET_VENDOR_QLOGIC = no;
@@ -379,7 +363,6 @@
                 NET_VENDOR_WANGXUN = no;
                 NET_VENDOR_WIZNET = no;
                 NET_VENDOR_XILINX = no;
-                NET_VENDOR_XIRCOM = no;
 
                 # Media type toggles only take effect with the filter on;
                 # stock sets EXPERT, which turns the filter off by default.
@@ -422,62 +405,19 @@
                 SND_SOC_ADI_AXI_SPDIF = no;
 
                 SND_SOC_AMD_ACP = no;
-                SND_SOC_AMD_CZ_DA7219MX98357_MACH = no;
-                SND_SOC_AMD_CZ_RT5645_MACH = no;
-                SND_SOC_AMD_ST_ES8336_MACH = no;
 
                 SND_SOC_FSL_ASRC = no;
                 SND_SOC_FSL_SAI = no;
-                SND_SOC_FSL_MQS = no;
                 SND_SOC_FSL_AUDMIX = no;
                 SND_SOC_FSL_SSI = no;
                 SND_SOC_FSL_SPDIF = no;
                 SND_SOC_FSL_ESAI = no;
                 SND_SOC_FSL_MICFIL = no;
-                SND_SOC_FSL_EASRC = no;
                 SND_SOC_FSL_XCVR = no;
-                SND_SOC_FSL_UTILS = no;
                 SND_SOC_FSL_RPMSG = no;
                 SND_SOC_IMX_AUDMUX = no;
 
-                SND_SOC_INTEL_KEEMBAY = no;
                 SND_SOC_MTK_BTCVSD = no;
-                SND_SOC_MESON_T9015 = no;
-                SND_SOC_SH4_FSI = no;
-
-                SND_SOC_RCAR = no;
-                SND_SOC_MSIOF = no;
-                SND_SOC_RZ = no;
-
-                SND_SOC_ROCKCHIP_I2S = no;
-                SND_SOC_ROCKCHIP_I2S_TDM = no;
-                SND_SOC_ROCKCHIP_PDM = no;
-                SND_SOC_ROCKCHIP_SAI = no;
-                SND_SOC_ROCKCHIP_SPDIF = no;
-                SND_SOC_ROCKCHIP_MAX98090 = no;
-                SND_SOC_ROCKCHIP_RT5645 = no;
-                SND_SOC_RK3288_HDMI_ANALOG = no;
-                SND_SOC_RK3399_GRU_SOUND = no;
-
-                SND_SOC_SAMSUNG = no;
-
-                SND_SOC_SPRD = no;
-
-                SND_SOC_STM32_SAI = no;
-                SND_SOC_STM32_I2S = no;
-                SND_SOC_STM32_SPDIFRX = no;
-                SND_SOC_STM32_DFSDM = no;
-
-                SND_SOC_TI_EDMA_PCM = no;
-                SND_SOC_TI_SDMA_PCM = no;
-                SND_SOC_TI_UDMA_PCM = no;
-                SND_SOC_DAVINCI_MCASP = no;
-                SND_SOC_J721E_EVM = no;
-
-                SND_SOC_UNIPHIER_AIO = no;
-                SND_SOC_UNIPHIER_LD11 = no;
-                SND_SOC_UNIPHIER_PXS2 = no;
-                SND_SOC_UNIPHIER_EVEA_CODEC = no;
 
                 SND_SOC_XILINX_I2S = no;
                 SND_SOC_XILINX_AUDIO_FORMATTER = no;
@@ -486,31 +426,19 @@
 
                 SND_SOC_SOF_TOPLEVEL = no;
 
-                SND_SOC_AC97_BUS = no;
-                SND_SOC_ACPI = no;
                 SND_SOC_APPLE_AOP_AUDIO = module;
                 SND_SOC_APPLE_MCA = module;
                 SND_SOC_APPLE_MACAUDIO = module;
                 SND_SOC_MIKROE_PROTO = no;
                 SND_SOC_CHV3_I2S = no;
-                SND_SOC_SDCA_OPTIONAL = no;
-                SND_SOC_CV1800B_TDM = no;
-                SND_SOC_CV1800B_ADC_CODEC = no;
-                SND_SOC_CV1800B_DAC_CODEC = no;
-                SND_SOC_WM_ADSP = no;
                 SND_SOC_AC97_CODEC = no;
-                SND_SOC_ADAU_UTILS = no;
-                SND_SOC_ADAU1372 = no;
                 SND_SOC_ADAU1372_I2C = no;
                 SND_SOC_ADAU1372_SPI = no;
                 SND_SOC_ADAU1373 = no;
                 SND_SOC_ADAU1701 = no;
-                SND_SOC_ADAU17X1 = no;
-                SND_SOC_ADAU1761 = no;
                 SND_SOC_ADAU1761_I2C = no;
                 SND_SOC_ADAU1761_SPI = no;
                 SND_SOC_ADAU7002 = no;
-                SND_SOC_ADAU7118 = no;
                 SND_SOC_ADAU7118_HW = no;
                 SND_SOC_ADAU7118_I2C = no;
                 SND_SOC_AK4104 = no;
@@ -526,7 +454,6 @@
                 SND_SOC_ALC5623 = no;
                 SND_SOC_AUDIO_IIO_AUX = no;
                 SND_SOC_AW8738 = no;
-                SND_SOC_AW88395_LIB = no;
                 SND_SOC_AW88395 = no;
                 SND_SOC_AW88166 = no;
                 SND_SOC_AW88261 = no;
@@ -536,33 +463,20 @@
                 SND_SOC_BD28623 = no;
                 SND_SOC_BT_SCO = no;
                 SND_SOC_CHV3_CODEC = no;
-                SND_SOC_CPCAP = no;
-                SND_SOC_CROS_EC_CODEC = no;
-                SND_SOC_CS_AMP_LIB = no;
                 SND_SOC_CS35L32 = no;
                 SND_SOC_CS35L33 = no;
                 SND_SOC_CS35L34 = no;
                 SND_SOC_CS35L35 = no;
                 SND_SOC_CS35L36 = no;
-                SND_SOC_CS35L41_LIB = no;
-                SND_SOC_CS35L41 = no;
                 SND_SOC_CS35L41_SPI = no;
                 SND_SOC_CS35L41_I2C = no;
-                SND_SOC_CS35L45 = no;
                 SND_SOC_CS35L45_SPI = no;
                 SND_SOC_CS35L45_I2C = no;
-                SND_SOC_CS35L56 = no;
-                SND_SOC_CS35L56_SHARED = no;
                 SND_SOC_CS35L56_I2C = no;
                 SND_SOC_CS35L56_SPI = no;
                 SND_SOC_CS35L56_SDW = no;
-                SND_SOC_CS40L50 = no;
-                SND_SOC_CS42L42_CORE = no;
                 SND_SOC_CS42L42 = no;
                 SND_SOC_CS42L42_SDW = no;
-                SND_SOC_CS42L43 = no;
-                SND_SOC_CS42L43_SDW = no;
-                SND_SOC_CS42L51 = no;
                 SND_SOC_CS42L51_I2C = no;
                 SND_SOC_CS42L52 = no;
                 SND_SOC_CS42L56 = no;
@@ -570,17 +484,14 @@
                 SND_SOC_CS4234 = no;
                 SND_SOC_CS4265 = no;
                 SND_SOC_CS4270 = no;
-                SND_SOC_CS4271 = no;
                 SND_SOC_CS4271_I2C = no;
                 SND_SOC_CS4271_SPI = no;
-                SND_SOC_CS42XX8 = no;
                 SND_SOC_CS42XX8_I2C = no;
                 SND_SOC_CS43130 = no;
                 SND_SOC_CS4341 = no;
                 SND_SOC_CS4349 = no;
                 SND_SOC_CS48L32 = no;
                 SND_SOC_CS53L30 = no;
-                SND_SOC_CS530X = no;
                 SND_SOC_CS530X_I2C = no;
                 SND_SOC_CS530X_SPI = no;
                 SND_SOC_CX2072X = no;
@@ -592,18 +503,15 @@
                 SND_SOC_ES8316 = no;
                 SND_SOC_ES8323 = no;
                 SND_SOC_ES8326 = no;
-                SND_SOC_ES8328 = no;
                 SND_SOC_ES8328_I2C = no;
                 SND_SOC_ES8328_SPI = no;
                 SND_SOC_ES8375 = no;
                 SND_SOC_ES8389 = no;
-                SND_SOC_FS_AMP_LIB = no;
                 SND_SOC_FS210X = no;
                 SND_SOC_GTM601 = no;
                 SND_SOC_HDA = no;
                 SND_SOC_ICS43432 = no;
                 SND_SOC_IDT821034 = no;
-                SND_SOC_INNO_RK3036 = no;
                 SND_SOC_MAX98088 = no;
                 SND_SOC_MAX98090 = no;
                 SND_SOC_MAX98357A = no;
@@ -612,7 +520,6 @@
                 SND_SOC_MAX98927 = no;
                 SND_SOC_MAX98520 = no;
                 SND_SOC_MAX98363 = no;
-                SND_SOC_MAX98373 = no;
                 SND_SOC_MAX98373_I2C = no;
                 SND_SOC_MAX98373_SDW = no;
                 SND_SOC_MAX98388 = no;
@@ -623,33 +530,22 @@
                 SND_SOC_MSM8916_WCD_DIGITAL = no;
                 SND_SOC_PCM1681 = no;
                 SND_SOC_PCM1754 = no;
-                SND_SOC_PCM1789 = no;
                 SND_SOC_PCM1789_I2C = no;
-                SND_SOC_PCM179X = no;
                 SND_SOC_PCM179X_I2C = no;
                 SND_SOC_PCM179X_SPI = no;
-                SND_SOC_PCM186X = no;
                 SND_SOC_PCM186X_I2C = no;
                 SND_SOC_PCM186X_SPI = no;
-                SND_SOC_PCM3060 = no;
                 SND_SOC_PCM3060_I2C = no;
                 SND_SOC_PCM3060_SPI = no;
-                SND_SOC_PCM3168A = no;
                 SND_SOC_PCM3168A_I2C = no;
                 SND_SOC_PCM3168A_SPI = no;
                 SND_SOC_PCM5102A = no;
-                SND_SOC_PCM512x = no;
                 SND_SOC_PCM512x_I2C = no;
                 SND_SOC_PCM512x_SPI = no;
                 SND_SOC_PCM6240 = no;
                 SND_SOC_PEB2466 = no;
-                SND_SOC_PM4125 = no;
                 SND_SOC_PM4125_SDW = no;
-                SND_SOC_RK3308 = no;
-                SND_SOC_RK3328 = no;
                 SND_SOC_RK817 = no;
-                SND_SOC_RL6231 = no;
-                SND_SOC_RT_SDW_COMMON = no;
                 SND_SOC_RT1017_SDCA_SDW = no;
                 SND_SOC_RT1308_SDW = no;
                 SND_SOC_RT1316_SDW = no;
@@ -660,18 +556,14 @@
                 SND_SOC_RT5631 = no;
                 SND_SOC_RT5640 = no;
                 SND_SOC_RT5659 = no;
-                SND_SOC_RT5682 = no;
                 SND_SOC_RT5682_SDW = no;
-                SND_SOC_RT700 = no;
                 SND_SOC_RT700_SDW = no;
-                SND_SOC_RT711 = no;
                 SND_SOC_RT711_SDW = no;
                 SND_SOC_RT711_SDCA_SDW = no;
                 SND_SOC_RT712_SDCA_SDW = no;
                 SND_SOC_RT712_SDCA_DMIC_SDW = no;
                 SND_SOC_RT721_SDCA_SDW = no;
                 SND_SOC_RT722_SDCA_SDW = no;
-                SND_SOC_RT715 = no;
                 SND_SOC_RT715_SDW = no;
                 SND_SOC_RT715_SDCA_SDW = no;
                 SND_SOC_RT9120 = no;
@@ -681,19 +573,14 @@
                 SND_SOC_RTQ9128 = no;
                 SND_SOC_SDW_MOCKUP = no;
                 SND_SOC_SGTL5000 = no;
-                SND_SOC_SIGMADSP = no;
-                SND_SOC_SIGMADSP_I2C = no;
-                SND_SOC_SIGMADSP_REGMAP = no;
                 SND_SOC_SIMPLE_AMPLIFIER = no;
                 SND_SOC_SIMPLE_MUX = no;
                 SND_SOC_SMA1303 = no;
                 SND_SOC_SMA1307 = no;
                 SND_SOC_SPDIF = no;
                 SND_SOC_SRC4XXX_I2C = no;
-                SND_SOC_SRC4XXX = no;
                 SND_SOC_SSM2305 = no;
                 SND_SOC_SSM2518 = no;
-                SND_SOC_SSM2602 = no;
                 SND_SOC_SSM2602_SPI = no;
                 SND_SOC_SSM2602_I2C = no;
                 SND_SOC_SSM3515 = no;
@@ -704,9 +591,6 @@
                 SND_SOC_TAS2552 = no;
                 SND_SOC_TAS2562 = no;
                 SND_SOC_TAS2780 = no;
-                SND_SOC_TAS2781_COMLIB = no;
-                SND_SOC_TAS2781_COMLIB_I2C = no;
-                SND_SOC_TAS2781_FMWLIB = no;
                 SND_SOC_TAS2781_I2C = no;
                 SND_SOC_TAS5086 = no;
                 SND_SOC_TAS571X = no;
@@ -717,14 +601,11 @@
                 SND_SOC_TFA9879 = no;
                 SND_SOC_TFA989X = no;
                 SND_SOC_TLV320ADC3XXX = no;
-                SND_SOC_TLV320AIC23 = no;
                 SND_SOC_TLV320AIC23_I2C = no;
                 SND_SOC_TLV320AIC23_SPI = no;
                 SND_SOC_TLV320AIC31XX = no;
-                SND_SOC_TLV320AIC32X4 = no;
                 SND_SOC_TLV320AIC32X4_I2C = no;
                 SND_SOC_TLV320AIC32X4_SPI = no;
-                SND_SOC_TLV320AIC3X = no;
                 SND_SOC_TLV320AIC3X_I2C = no;
                 SND_SOC_TLV320AIC3X_SPI = no;
                 SND_SOC_TLV320ADCX140 = no;
@@ -734,16 +615,10 @@
                 SND_SOC_UDA1334 = no;
                 SND_SOC_UDA1342 = no;
                 SND_SOC_UDA1380 = no;
-                SND_SOC_WCD_CLASSH = no;
-                SND_SOC_WCD_COMMON = no;
                 SND_SOC_WCD9335 = no;
-                SND_SOC_WCD_MBHC = no;
                 SND_SOC_WCD934X = no;
-                SND_SOC_WCD937X = no;
                 SND_SOC_WCD937X_SDW = no;
-                SND_SOC_WCD938X = no;
                 SND_SOC_WCD938X_SDW = no;
-                SND_SOC_WCD939X = no;
                 SND_SOC_WCD939X_SDW = no;
                 SND_SOC_WM8510 = no;
                 SND_SOC_WM8523 = no;
@@ -751,7 +626,6 @@
                 SND_SOC_WM8580 = no;
                 SND_SOC_WM8711 = no;
                 SND_SOC_WM8728 = no;
-                SND_SOC_WM8731 = no;
                 SND_SOC_WM8731_I2C = no;
                 SND_SOC_WM8731_SPI = no;
                 SND_SOC_WM8737 = no;
@@ -761,7 +635,6 @@
                 SND_SOC_WM8770 = no;
                 SND_SOC_WM8776 = no;
                 SND_SOC_WM8782 = no;
-                SND_SOC_WM8804 = no;
                 SND_SOC_WM8804_I2C = no;
                 SND_SOC_WM8804_SPI = no;
                 SND_SOC_WM8903 = no;
@@ -789,11 +662,9 @@
                 SND_SOC_NAU8821 = no;
                 SND_SOC_NAU8822 = no;
                 SND_SOC_NAU8824 = no;
-                SND_SOC_NTPFW = no;
                 SND_SOC_NTP8918 = no;
                 SND_SOC_NTP8835 = no;
                 SND_SOC_TPA6130A2 = no;
-                SND_SOC_LPASS_MACRO_COMMON = no;
                 SND_SOC_LPASS_WSA_MACRO = no;
                 SND_SOC_LPASS_VA_MACRO = no;
                 SND_SOC_LPASS_RX_MACRO = no;
@@ -826,7 +697,6 @@
                 ARCH_SOPHGO = no;
                 ARCH_STM32 = no;
                 ARCH_SYNQUACER = no;
-                ARCH_TESLA_FSD = no;
                 ARCH_SPRD = no;
                 ARCH_THUNDER = no;
                 ARCH_THUNDER2 = no;
@@ -835,12 +705,181 @@
                 ARCH_VISCONTI = no;
                 ARCH_XGENE = no;
                 ARCH_ZYNQMP = no;
+                CP15_BARRIER_EMULATION = lib.mkForce (option no);
+                DEFAULT_SECURITY_APPARMOR = lib.mkForce (option no);
+                MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT = lib.mkForce (option no);
+                NET_VENDOR_MEDIATEK = lib.mkForce (option no);
+                SCHED_CLASS_EXT = lib.mkForce (option no);
+                # Orphaned by disabled parents; common-config still requests them.
+                "8139TOO_8129" = lib.mkForce (option no);
+                "8139TOO_PIO" = lib.mkForce (option no);
+                AIC79XX_DEBUG_ENABLE = lib.mkForce (option no);
+                AIC7XXX_DEBUG_ENABLE = lib.mkForce (option no);
+                AIC94XX_DEBUG = lib.mkForce (option no);
+                ATA_BMDMA = lib.mkForce (option no);
+                ATA_SFF = lib.mkForce (option no);
+                BFQ_GROUP_IOSCHED = lib.mkForce (option no);
+                BPF_EVENTS = lib.mkForce (option no);
+                BTRFS_FS_POSIX_ACL = lib.mkForce (option no);
+                BT_HCIBTUSB_AUTOSUSPEND = lib.mkForce (option no);
+                BT_HCIBTUSB_MTK = lib.mkForce (option no);
+                BT_HCIUART_QCA = lib.mkForce (option no);
+                BT_HCIUART_SERDEV = lib.mkForce (option no);
+                BT_QCA = lib.mkForce (option no);
+                CEPH_FSCACHE = lib.mkForce (option no);
+                CEPH_FS_POSIX_ACL = lib.mkForce (option no);
+                CHROMEOS_TBMC = lib.mkForce (option no);
+                CIFS_DFS_UPCALL = lib.mkForce (option no);
+                CIFS_FSCACHE = lib.mkForce (option no);
+                CIFS_UPCALL = lib.mkForce (option no);
+                CIFS_XATTR = lib.mkForce (option no);
+                CLS_U32_MARK = lib.mkForce (option no);
+                CLS_U32_PERF = lib.mkForce (option no);
+                CROS_EC = lib.mkForce (option no);
+                CROS_EC_I2C = lib.mkForce (option no);
+                CROS_EC_SPI = lib.mkForce (option no);
+                CROS_KBD_LED_BACKLIGHT = lib.mkForce (option no);
+                CRYPTO_AEGIS128_SIMD = lib.mkForce (option no);
+                CRYPTO_DRBG_CTR = lib.mkForce (option no);
+                CRYPTO_DRBG_HASH = lib.mkForce (option no);
+                DRAGONRISE_FF = lib.mkForce (option no);
+                DRM_AMDGPU_CIK = lib.mkForce (option no);
+                DRM_AMDGPU_SI = lib.mkForce (option no);
+                DRM_AMDGPU_USERPTR = lib.mkForce (option no);
+                DRM_AMD_ACP = lib.mkForce (option no);
+                DRM_AMD_DC_SI = lib.mkForce (option no);
+                DRM_AMD_ISP = lib.mkForce (option no);
+                DRM_HYPERV = lib.mkForce (option no);
+                DRM_NOUVEAU_SVM = lib.mkForce (option no);
+                DRM_VC4_HDMI_CEC = lib.mkForce (option no);
+                EROFS_FS_ZIP_DEFLATE = lib.mkForce (option no);
+                EROFS_FS_ZIP_ZSTD = lib.mkForce (option no);
+                EXT2_FS_POSIX_ACL = lib.mkForce (option no);
+                EXT2_FS_SECURITY = lib.mkForce (option no);
+                EXT2_FS_XATTR = lib.mkForce (option no);
+                F2FS_FS_COMPRESSION = lib.mkForce (option no);
+                FB_3DFX_ACCEL = lib.mkForce (option no);
+                FB_ATY_CT = lib.mkForce (option no);
+                FB_ATY_GX = lib.mkForce (option no);
+                FB_NVIDIA_I2C = lib.mkForce (option no);
+                FB_RIVA_I2C = lib.mkForce (option no);
+                FB_SAVAGE_ACCEL = lib.mkForce (option no);
+                FB_SAVAGE_I2C = lib.mkForce (option no);
+                FB_SIS_300 = lib.mkForce (option no);
+                FB_SIS_315 = lib.mkForce (option no);
+                FSCACHE_STATS = lib.mkForce (option no);
+                FSL_MC_UAPI_SUPPORT = lib.mkForce (option no);
+                FTRACE_SYSCALLS = lib.mkForce (option no);
+                FUNCTION_GRAPH_RETVAL = lib.mkForce (option no);
+                FUNCTION_PROFILER = lib.mkForce (option no);
+                FUNCTION_TRACER = lib.mkForce (option no);
+                GREENASIA_FF = lib.mkForce (option no);
+                HID_ACRUX_FF = lib.mkForce (option no);
+                HID_BPF = lib.mkForce (option no);
+                HMM_MIRROR = lib.mkForce (option no);
+                HOLTEK_FF = lib.mkForce (option no);
+                HSA_AMD = lib.mkForce (option no);
+                HSA_AMD_P2P = lib.mkForce (option no);
+                INET6_ESPINTCP = lib.mkForce (option no);
+                INET_ESPINTCP = lib.mkForce (option no);
+                INET_MPTCP_DIAG = lib.mkForce (option no);
+                INFINIBAND_IPOIB = lib.mkForce (option no);
+                INFINIBAND_IPOIB_CM = lib.mkForce (option no);
+                IPE_PROP_FS_VERITY = lib.mkForce (option no);
+                IPE_PROP_FS_VERITY_BUILTIN_SIG = lib.mkForce (option no);
+                JOYSTICK_PSXPAD_SPI_FF = lib.mkForce (option no);
+                L2TP_ETH = lib.mkForce (option no);
+                L2TP_IP = lib.mkForce (option no);
+                L2TP_V3 = lib.mkForce (option no);
+                LOGIG940_FF = lib.mkForce (option no);
+                LOGIRUMBLEPAD2_FF = lib.mkForce (option no);
+                LOGITECH_FF = lib.mkForce (option no);
+                LOGIWHEELS_FF = lib.mkForce (option no);
+                MAC80211_DEBUGFS = lib.mkForce (option no);
+                MEDIA_ATTACH = lib.mkForce (option no);
+                MEGARAID_NEWGEN = lib.mkForce (option no);
+                MPTCP_IPV6 = lib.mkForce (option no);
+                MT798X_WMAC = lib.mkForce (option no);
+                NETFILTER_NETLINK_GLUE_CT = lib.mkForce (option no);
+                NET_DROP_MONITOR = lib.mkForce (option no);
+                NET_SCH_BPF = lib.mkForce (option no);
+                NFSD_V3_ACL = lib.mkForce (option no);
+                NFSD_V4 = lib.mkForce (option no);
+                NFSD_V4_SECURITY_LABEL = lib.mkForce (option no);
+                NFS_FSCACHE = lib.mkForce (option no);
+                NFS_LOCALIO = lib.mkForce (option no);
+                NFS_SWAP = lib.mkForce (option no);
+                NFS_V3_ACL = lib.mkForce (option no);
+                NFS_V4_2 = lib.mkForce (option no);
+                NFS_V4_SECURITY_LABEL = lib.mkForce (option no);
+                NFT_REJECT_NETDEV = lib.mkForce (option no);
+                NF_FLOW_TABLE_PROCFS = lib.mkForce (option no);
+                NF_TABLES_ARP = lib.mkForce (option no);
+                NF_TABLES_BRIDGE = lib.mkForce (option no);
+                NF_TABLES_INET = lib.mkForce (option no);
+                NF_TABLES_IPV4 = lib.mkForce (option no);
+                NF_TABLES_IPV6 = lib.mkForce (option no);
+                NF_TABLES_NETDEV = lib.mkForce (option no);
+                NINTENDO_FF = lib.mkForce (option no);
+                NTFS3_FS_POSIX_ACL = lib.mkForce (option no);
+                NTFS3_LZX_XPRESS = lib.mkForce (option no);
+                NTFS_FS_POSIX_ACL = lib.mkForce (option no);
+                NVIDIA_SHIELD_FF = lib.mkForce (option no);
+                NVME_AUTH = lib.mkForce (option no);
+                NVME_TARGET_AUTH = lib.mkForce (option no);
+                NVME_TARGET_PASSTHRU = lib.mkForce (option no);
+                NVME_TARGET_TCP_TLS = lib.mkForce (option no);
+                NVME_TCP_TLS = lib.mkForce (option no);
+                PLAYSTATION_FF = lib.mkForce (option no);
+                PPP_FILTER = lib.mkForce (option no);
+                PPP_MULTILINK = lib.mkForce (option no);
+                RING_BUFFER_BENCHMARK = lib.mkForce (option no);
+                ROCKCHIP_DW_HDMI_QP = lib.mkForce (option no);
+                ROCKCHIP_DW_MIPI_DSI2 = lib.mkForce (option no);
+                RT2800USB_RT53XX = lib.mkForce (option no);
+                RT2800USB_RT55XX = lib.mkForce (option no);
+                RTW88 = lib.mkForce (option no);
+                RTW88_8822BE = lib.mkForce (option no);
+                RTW88_8822CE = lib.mkForce (option no);
+                SATA_MOBILE_LPM_POLICY = lib.mkForce (option no);
+                SCHED_TRACER = lib.mkForce (option no);
+                SCSI_LOWLEVEL_PCMCIA = lib.mkForce (option no);
+                SCSI_SAS_ATA = lib.mkForce (option no);
+                SLIP_COMPRESSED = lib.mkForce (option no);
+                SLIP_SMART = lib.mkForce (option no);
+                SMARTJOYPLUS_FF = lib.mkForce (option no);
+                SND_AC97_POWER_SAVE = lib.mkForce (option no);
+                SND_AC97_POWER_SAVE_DEFAULT = lib.mkForce (option no);
+                SND_HDA_CODEC_CS8409 = lib.mkForce (option no);
+                SND_HDA_INPUT_BEEP = lib.mkForce (option no);
+                SND_HDA_PATCH_LOADER = lib.mkForce (option no);
+                SND_HDA_POWER_SAVE_DEFAULT = lib.mkForce (option no);
+                SND_HDA_RECONFIG = lib.mkForce (option no);
+                SND_USB_CAIAQ_INPUT = lib.mkForce (option no);
+                SONY_FF = lib.mkForce (option no);
+                STACK_TRACER = lib.mkForce (option no);
+                SUN8I_DE2_CCU = lib.mkForce (option no);
+                SUNRPC_DEBUG = lib.mkForce (option no);
+                TASK_DELAY_ACCT = lib.mkForce (option no);
+                TASK_IO_ACCOUNTING = lib.mkForce (option no);
+                TASK_XACCT = lib.mkForce (option no);
+                THRUSTMASTER_FF = lib.mkForce (option no);
+                USB_XHCI_TEGRA = lib.mkForce (option no);
+                VFIO_DEVICE_CDEV = lib.mkForce (option no);
+                ZEROPLUS_FF = lib.mkForce (option no);
+                ZRAM_BACKEND_842 = lib.mkForce (option no);
+                ZRAM_BACKEND_DEFLATE = lib.mkForce (option no);
+                ZRAM_BACKEND_LZ4 = lib.mkForce (option no);
+                ZRAM_BACKEND_LZ4HC = lib.mkForce (option no);
+                ZRAM_BACKEND_LZO = lib.mkForce (option no);
+                ZRAM_BACKEND_ZSTD = lib.mkForce (option no);
+                ZRAM_DEF_COMP_ZSTD = lib.mkForce (option no);
+                ZRAM_MULTI_COMP = lib.mkForce (option no);
 
                 IKHEADERS = no;
 
                 # Profiling-related and other overhead stuff.
                 MEM_ALLOC_PROFILING = lib.mkForce no;
-                MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT = lib.mkForce no;
                 SCHEDSTATS = lib.mkForce no;
                 FTRACE = lib.mkForce no;
                 KPROBES = lib.mkForce no;
@@ -849,18 +888,16 @@
 
                 # Security modules unused on finit
                 SECURITY_APPARMOR = lib.mkForce no;
-                DEFAULT_SECURITY_APPARMOR = lib.mkForce no;
                 IMA = lib.mkForce no;
                 SECURITY_IPE = lib.mkForce no;
 
                 # More irrelevant ARM for Apple.
                 ARM_SMMU_V3_SVA = lib.mkForce no;
-                ARMV8_DEPRECATED = lib.mkForce no;
-                CP15_BARRIER_EMULATION = lib.mkForce no;
+                ARMV8_DEPRECATED = lib.mkForce (option no);
                 CHROME_PLATFORMS = lib.mkForce no;
                 GOOGLE_FIRMWARE = lib.mkForce no;
-                ACPI_HOTPLUG_CPU = lib.mkForce no;
                 ACPI_HOTPLUG_MEMORY = lib.mkForce no;
+                COMPAT_ALIGNMENT_FIXUPS = lib.mkForce (option no);
 
                 # Touch Bar (13" models only); the J314 has none.
                 TOUCHSCREEN_APPLE_Z2 = no;
@@ -872,7 +909,6 @@
                 BT_INTEL_PCIE = no;
                 BT_MRVL = no;
                 BT_MTKSDIO = no;
-                BT_MTKUART = no;
 
                 # Arm Mali and Imagination GPUs from the arm64 defconfig.
                 DRM_PANTHOR = no;
@@ -904,16 +940,10 @@
                 BONDING = lib.mkForce no;
 
                 # sched_ext and BPF LSM need BTF, which is off below; make it explicit.
-                SCHED_CLASS_EXT = lib.mkForce no;
-                BPF_LSM = lib.mkForce no;
 
                 # Cheers, BestInfinity.
-                DEBUG_KERNEL = lib.mkForce no;
                 DEBUG_INFO_BTF = lib.mkForce no;
-                FRAME_POINTER = no;
                 KGDB = no;
-                KGDB_SERIAL_CONSOLE = no;
-                DEBUG_INFO = lib.mkForce no;
                 DYNAMIC_DEBUG = lib.mkForce no;
 
                 # Small(?) speed hit.
@@ -925,6 +955,27 @@
                 # ThinLTO with Clang.
                 LTO_NONE = no;
                 LTO_CLANG_THIN = yes;
+
+                # Hardening: remove dangerous interfaces.
+                DEVMEM = lib.mkForce (option no);
+                STRICT_DEVMEM = lib.mkForce (option no);
+                IO_STRICT_DEVMEM = lib.mkForce (option no);
+                LDISC_AUTOLOAD = lib.mkForce (option no);
+                LEGACY_PTYS = lib.mkForce (option no);
+                KEXEC = lib.mkForce (option no);
+                KEXEC_FILE = lib.mkForce (option no);
+                HIBERNATION = lib.mkForce (option no);
+                DEBUG_FS = lib.mkForce (option no);
+                IO_URING = lib.mkForce (option no);
+                # Might break QEMU?
+                USERFAULTFD = lib.mkForce (option no);
+
+                # Hardening: mitigations that come from unused features.
+                LIST_HARDENING = lib.mkForce (option yes);
+                DEBUG_WX = lib.mkForce (option yes);
+
+                # M1 (Pro) has no AArch32 support; with clang the kernel would build it.
+                COMPAT = lib.mkForce no;
               };
               features.rust = true;
             }
