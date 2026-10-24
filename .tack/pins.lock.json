@@ -3,9 +3,9 @@
     "type": "github",
     "owner": "finix-community",
     "repo": "finix",
-    "rev": "58c886c9a24d360f3acc51df6e316a2696240223",
-    "narHash": "sha256-+mTcB6uxMLY45h+iAOy+9Pd3uWkThr76FY1fQylcXWc=",
-    "lastModified": 1792448191
+    "rev": "5211bd4ed50f73b1c08df7e05a549502d4cff738",
+    "narHash": "sha256-Fua+PKbzkPSbKKPhoqPFUcWWuNb7oTPn/QmDU1qqEnQ=",
+    "lastModified": 1792552401
   },
   "finix-community": {
     "type": "github",
@@ -35,8 +35,14 @@
     "type": "github",
     "owner": "NixOS",
     "repo": "nixpkgs",
-    "rev": "fe13242281a67641c0102cdb1087f0ebe586c7df",
-    "narHash": "sha256-zp8ToDMnqZcu4o4IH9pdwXFXGp7yLm/M0dEnNWnyd7I=",
-    "lastModified": 1792094642
+    "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
+    "narHash": "sha256-IoNisKcGbUjdd45qCqywGMCYmZ5EnkxezvLII0FWwNA=",
+    "lastModified": 1792502884
+  },
+  "nixpkgs-zst": {
+    "type": "tarball",
+    "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1097682.02c087f3fe67/nixexprs.tar.zst",
+    "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
+    "narHash": "sha256-ij8QUxzTOHovLrNOxVRx+RAhGQFOMsJbji0veiatH5k="
   }
 }
