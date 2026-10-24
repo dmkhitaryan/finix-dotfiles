@@ -16,7 +16,55 @@ let
     pkgs = import sources.nixpkgs (
       {
         inherit overlays;
-        config.allowUnfree = true;
+        config =
+          {
+            allowUnfree = true;
+          }
+          // (
+            if pkgsSet == "musl"
+            then {
+              replaceStdenv = {pkgs}: let
+                clangCC = pkgs.clangStdenv.cc;
+                rustHook = ''
+                  case "''${pname:-}" in
+                    rustc | rustc-unwrapped)
+                      # nix-wrapped clang's hardening flags break rustc's wasm32 parts.
+                      # TODO: un-hardcode use of Apple CPU?
+                      export NIX_HARDENING_ENABLE="''${NIX_HARDENING_ENABLE//zerocallusedregs/}"
+                      ;;
+                    *)
+                      export RUSTFLAGS="''${RUSTFLAGS:-} -C target-cpu=apple-m1"
+                      ;;
+                  esac
+                  # Skip test suites in the clang set; many fail on clang/musl for test-only reasons.
+                  unset doCheck doInstallCheck
+                '';
+              in
+                pkgs.overrideCC pkgs.clangStdenv (clangCC.override (old: {
+                  # Some packages read stdenv.cc.cc.libgcc under clang; borrow gcc's.
+                  cc = clangCC.cc // {libgcc = pkgs.stdenv.cc.cc.libgcc;};
+                  bintools = pkgs.llvmPackages.bintools.override {
+                    bintools = pkgs.llvmPackages.bintools-unwrapped.overrideAttrs (bOld: {
+                      buildCommand =
+                        bOld.buildCommand
+                        + "\n"
+                        + ''
+                          rm -f $out/bin/windres $out/bin/*-windres
+                        '';
+                    });
+                  };
+                  extraBuildCommands =
+                    (old.extraBuildCommands or "")
+                    + ''
+                      echo "-mcpu=apple-m1" >> $out/nix-support/cc-cflags
+                      # lld rejects version scripts naming missing symbols; GNU ld ignored them.
+                      echo "--undefined-version" >> $out/nix-support/cc-ldflags
+                      echo ${pkgs.lib.escapeShellArg rustHook} >> $out/nix-support/setup-hook
+                    '';
+                }));
+            }
+            else {}
+          );
       }
       // (
         if pkgsSet == "musl"
@@ -85,34 +133,36 @@ in {
     necoarc = mkHost {
       system = "x86_64-linux";
       overlays = [];
-      modules = with sources.finix.nixosModules; [
-        (./hosts/necoarc/configuration.nix)
-        nix-daemon
-        nano
-        chronyd
-        brightnessctl
-        openssh
-        openbox
-        sysklogd
-        limine
-        sudo
-        polkit
-        rtkit
-        getty
-        bash
-        dhcpcd
-        iwd
-        gvfs
-        ly
-        gnome-keyring
-        xwayland-satellite
-        power-profiles-daemon
-        pipewire
-        wireplumber
-        bluetooth
-        docker
-      ] ++ (with sources.finix-community.nixosModules; [
-        steam
+      modules = with sources.finix.nixosModules;
+        [
+          (./hosts/necoarc/configuration.nix)
+          nix-daemon
+          nano
+          chronyd
+          brightnessctl
+          openssh
+          openbox
+          sysklogd
+          limine
+          sudo
+          polkit
+          rtkit
+          getty
+          bash
+          dhcpcd
+          iwd
+          gvfs
+          ly
+          gnome-keyring
+          xwayland-satellite
+          power-profiles-daemon
+          pipewire
+          wireplumber
+          bluetooth
+          docker
+        ]
+        ++ (with sources.finix-community.nixosModules; [
+          steam
         ]);
       specialArgs = {
         finix = sources.finix;
