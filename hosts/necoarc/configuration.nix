@@ -13,6 +13,11 @@ let
     hostName = config.networking.hostName;
   };
 
+  tscsync = pkgs.runCommandCC "tscsync" { src = ./tscsync.c; } ''
+    mkdir -p $out/bin
+    $CC -O2 -pthread -o $out/bin/tscsync $src
+  '';
+
   rfkill-unblock = pkgs.writeShellScriptBin "rfkill-unblock" ''
     exec ${pkgs.util-linux}/bin/rfkill unblock all
   '';
@@ -115,6 +120,22 @@ in
     command = "${rfkill-unblock}/bin/rfkill-unblock";
   };
 
+  finit.rlimits.nofile = {
+    soft = 1048576;
+    hard = 1048576;
+  };
+
+  finit.run.tscsync = {
+    description = "Resync CPU0 TSC (Lenovo AMD firmware bug)";
+    runlevel = "S";
+    command = pkgs.writeShellScript "tscsync-apply" ''
+      ${pkgs.kmod}/bin/modprobe msr
+      if ! ${tscsync}/bin/tscsync --apply --quiet; then
+        echo hpet > /sys/devices/system/clocksource/clocksource0/current_clocksource
+      fi
+    '';
+  };
+
   hardware = {
     cpu.amd.updateMicrocode = true;
 
@@ -150,7 +171,7 @@ in
   programs = {
     bash.enable = true;
     brightnessctl.enable = true;
-    gnome-keyring.enable = false;
+    gnome-keyring.enable = true;
     steam.enable = true;
 
     limine = {
@@ -315,6 +336,7 @@ in
   boot.kernelParams = [
     "zswap.enabled=1"
     "zswap.max_pool_percent=25"
+    "tsc=reliable"
   ];
   boot.initrd.kernelModules = [
     "efivarfs"
@@ -327,6 +349,7 @@ in
   boot.kernelModules = [
     "legion_laptop"
     "ryzen_smu"
+    "msr"
   ];
 
   xdg.portal = {
@@ -476,5 +499,6 @@ in
     usbmuxd
     protonplus
     vlc
+    tscsync
   ];
 }
