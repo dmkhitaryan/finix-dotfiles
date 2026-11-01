@@ -9,9 +9,21 @@
         ++ ["-Dbackends=drm,libinput"];
     });
 
-  scenefxNoX = pkgs.scenefx.override {
-    wlroots_0_20 = wlrootsNoX;
-  };
+  scenefxNoX =
+    (pkgs.scenefx.override {
+      wlroots_0_20 = wlrootsNoX;
+    }).overrideAttrs (old: {
+      patches =
+        (old.patches or [])
+        ++ [
+          (builtins.fetchurl {
+            name = "scenefx-always-inline-musl.patch";
+            url = "https://github.com/wlrfx/scenefx/commit/84648eb290c22f61dc58a9626c16b30f2177272f.patch";
+            sha256 = "sha256:1wnryhfh92mvyh807638smp7ifrdbp49cyxsq8mjyiy97jvhmpiv";
+          })
+        ];
+      mesonFlags = ["-Dexamples=false"];
+    });
 
   mango = pkgs.mango.override {
     enableXWayland = false;
