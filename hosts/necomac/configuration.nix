@@ -21,6 +21,7 @@
   # The nixpkgs source path as plain text: no closure dependency.
   # Kept alive by the gcroot rule below instead.
   nixpkgsSrc = builtins.unsafeDiscardStringContext "${sources.nixpkgs}";
+  nixpkgsLock = (builtins.fromJSON (builtins.readFile ../../.tack/pins.lock.json)).nixpkgs;
 
   nnn-foot = pkgs.makeDesktopItem {
     name = "nnn-foot";
@@ -71,8 +72,8 @@
           };
 
           to = {
-            type = "path";
-            path = nixpkgsSrc;
+            type = "tarball";
+            inherit (nixpkgsLock) url narHash;
           };
         }
       ];
@@ -355,6 +356,11 @@
           syscall(SYS_sched_setscheduler, (pid), (policy), (param))'
       '';
   });
+
+  # rpmalloc for musl programs (patches/musl-preload-file.patch).
+  muslPreload = pkgs.writeText "ld-musl-aarch64.preload" ''
+    ${pkgs.rpmalloc}/lib/librpmalloc.so
+  '';
 in {
   imports = [
     ./hardware-configuration.nix
@@ -400,9 +406,6 @@ in {
   finit.tmpfiles.rules = [
     "d /var/lib/lastlog 0755 - - -"
     "d /nix/var/nix/builds 0755 root root - -"
-    # GC root for the nixpkgs source this system was evaluated from.
-    # This way we don't add it to closure explicitly, and won't delete accidentally!
-    "L+ /nix/var/nix/gcroots/nixpkgs-source - - - - ${nixpkgsSrc}"
   ];
 
   finit.tasks.battery-charge-limit = {
@@ -456,6 +459,8 @@ in {
         "@wheel"
       ];
       warn-dirty = "false";
+      # Same preload in builds; the store path pulls rpmalloc in.
+      extra-sandbox-paths = ["/etc/ld-musl-aarch64.preload=${muslPreload}"];
     };
   };
 
@@ -466,41 +471,7 @@ in {
     "zswap.enabled=1"
     "zswap.max_pool_percent=20"
   ];
-  boot.initrd.availableKernelModules = lib.mkForce [
-    "apple-mailbox"
-    "appledrm"
-    "apple_nvmem_spmi"
-    "nvme_apple"
-    "pinctrl-apple-gpio"
-    "macsmc"
-    "macsmc-power"
-    "macsmc-input"
-    "macsmc-hwmon"
-    "macsmc-reboot"
-    "i2c-pasemi-platform"
-    "tps6598x"
-    "apple-dart"
-    "dwc3"
-    "dwc3-of-simple"
-    "xhci-pci"
-    "pcie-apple"
-    "gpio_macsmc"
-    "phy-apple-atc"
-    "nvmem_apple_efuses"
-    "spi-apple"
-    "spi-hid-apple"
-    "spi-hid-apple-of"
-    "rtc-macsmc"
-    "spmi-apple-controller"
-    "apple-dockchannel"
-    "dockchannel-hid"
-    "apple-rtkit-helper"
-    "usb-storage"
-    "xhci-plat-hcd"
-    "usbhid"
-    "hid_generic"
-    "ext4"
-  ];
+
   boot.kernelPatches = [
     # ~20% battery boost on M1 Pro!
     {
@@ -513,7 +484,7 @@ in {
       patch = ../../patches/necomac-builtin.patch;
     }
   ];
-  boot.initrd.kernelModules = [
+  boot.initrd.kernelModules = lib.mkForce [
     "mux_apple_display_crossbar"
   ];
 
@@ -568,11 +539,8 @@ in {
     doas.enable = true;
     modprobe.blacklist = [
       "apple_isp"
-      "sm4_ce"
-      "sm4_ce_gcm"
       "hci_bcm4377"
     ];
-    bash.enable = true;
   };
 
   services.dbus.packages = [
@@ -657,7 +625,8 @@ in {
       "pipewire"
       config.services.seatd.group
     ];
-    packages = with pkgs; [];
+    packages = [];
+    shell = lib.getExe pkgs.yash;
   };
 
   hardware.graphics.enable = true;
@@ -706,6 +675,8 @@ in {
     };
   };
 
+  environment.etc."ld-musl-aarch64.preload".source = muslPreload;
+
   environment.etc."xdg/xdg-desktop-portal/mango-portals.conf".text = ''
     [preferred]
     default=wlr;gtk;
@@ -713,7 +684,7 @@ in {
     org.freedesktop.impl.portal.ScreenCast=wlr;
     org.freedesktop.impl.portal.Secret=oo7-portal;
     org.freedesktop.impl.portal.FileChooser=termfilechooser;
-  ''; # TODO: decide on gtk/termfilechooser for the FileChooser portal.
+  '';
 
   environment.etc."xdg/xdg-desktop-portal-wlr/config".text = ''
     [screencast]
@@ -784,6 +755,7 @@ in {
       args = ["suspend"];
     }
   ];
+  environment.shells = [pkgs.yash];
   environment.variables.LANGUAGE = "en_GB:en";
   environment.variables.LV2_PATH = lib.makeSearchPath "lib/lv2" [
     # All needed for sound on Asahi Linux.
@@ -871,51 +843,62 @@ in {
     ]
   );
 
-  environment.systemPackages = with pkgs; [
-    nil
-    alejandra
-    wget
-    imv
-    xdg-open
-    shared-mime-info
-    gitMinimal
-    iputils
-    iwmenu
-    iproute2
-    libnotify
-    stash-clipboard
-    foot
-    adwaita-icon-theme
-    wrappers.fuzzel
-    wrappers.firefox.firefox-musl
-    handlr-regex
-    oo7-server-fix
-    oo7-portal
-    asahi-audio
-    alsa-ucm-conf-asahi
-    speakersafetyd
-    triforce-lv2
-    bankstown-lv2
-    start-pipewire
-    lsp-plugins
-    swaybg
-    dconf
-    nnn-foot
-    nh-unwrapped
-    playerctl
-    tree
-    btop
-    libarchive
-    grim
-    slurp
-    makoCustom
-    wrappers.mango
-    send-volume-notif
-    send-brightness-notif
-    start-webcamera
-    tack
-    microfetch
-    nnn
-    micro
-  ];
+  environment.systemPackages =
+    builtins.attrValues {
+      inherit
+        (pkgs)
+        nil
+        alejandra
+        wget
+        imv
+        shared-mime-info
+        gitMinimal
+        iputils
+        iwmenu
+        iproute2
+        libnotify
+        stash-clipboard
+        foot
+        adwaita-icon-theme
+        handlr-regex
+        oo7-portal
+        asahi-audio
+        alsa-ucm-conf-asahi
+        speakersafetyd
+        triforce-lv2
+        bankstown-lv2
+        lsp-plugins
+        swaybg
+        dconf
+        nh-unwrapped
+        playerctl
+        tree
+        btop
+        libarchive
+        grim
+        slurp
+        tack
+        microfetch
+        nnn
+        micro
+        yash
+        uutils-diffutils
+        ;
+
+      inherit
+        xdg-open
+        makoCustom
+        oo7-server-fix
+        nnn-foot
+        start-pipewire
+        start-webcamera
+        send-volume-notif
+        send-brightness-notif
+        ;
+    }
+    ++ [
+      wrappers.fuzzel
+      wrappers.firefox.firefox-musl
+      wrappers.mango
+    ];
 }

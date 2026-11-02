@@ -3,17 +3,17 @@
     "type": "github",
     "owner": "finix-community",
     "repo": "finix",
-    "rev": "5211bd4ed50f73b1c08df7e05a549502d4cff738",
-    "narHash": "sha256-Fua+PKbzkPSbKKPhoqPFUcWWuNb7oTPn/QmDU1qqEnQ=",
-    "lastModified": 1792552401
+    "rev": "6e48321336bb5d43b0e8b2ae56726c09844b26d4",
+    "narHash": "sha256-9Ow2khVMSJ5aBMSuruFhPRC0xvBAFsTNSKyVgbY9QCY=",
+    "lastModified": 1793578751
   },
   "finix-community": {
     "type": "github",
     "owner": "finix-community",
     "repo": "community-modules",
-    "rev": "a23be2c6a777fc0be1a0a857f6a5296db1eb054a",
-    "narHash": "sha256-6gcFYf4BFHaApP+sB7N4alek0CJ+opNYBDNyl5MFQfE=",
-    "lastModified": 1791743568
+    "rev": "a37b714f32ea83cbda2cba6e369dbfb08790418f",
+    "narHash": "sha256-Dhow+/xyA81KV0DO/p37VcaZH7x9C0NfSNj28tFHfjc=",
+    "lastModified": 1793480060
   },
   "finix-test": {
     "type": "github",
@@ -23,26 +23,26 @@
     "narHash": "sha256-8zh/Y8RQeyOCdpUZd5d08A/vXKZVpJLMczSFpTLFk+g=",
     "lastModified": 1792103767
   },
-  "nh": {
-    "type": "github",
-    "owner": "nix-community",
-    "repo": "nh",
-    "rev": "697d99b771fc0eb3dccbdefeacabfcc5e3091955",
-    "narHash": "sha256-/xR4SGAtkr4Au5O0U7izaVsrovgUANdRHxRUAE59pJs=",
-    "lastModified": 1792446434
-  },
   "nixpkgs": {
-    "type": "github",
-    "owner": "NixOS",
-    "repo": "nixpkgs",
-    "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
-    "narHash": "sha256-IoNisKcGbUjdd45qCqywGMCYmZ5EnkxezvLII0FWwNA=",
-    "lastModified": 1792502884
-  },
-  "nixpkgs-zst": {
     "type": "tarball",
-    "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1097682.02c087f3fe67/nixexprs.tar.zst",
-    "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
-    "narHash": "sha256-ij8QUxzTOHovLrNOxVRx+RAhGQFOMsJbji0veiatH5k="
+    "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1106360.0bb2eedc20e4/nixexprs.tar.zst",
+    "rev": "0bb2eedc20e4739f29e8045034f2828ad7054f8f",
+    "narHash": "sha256-us2GRWGXbOQpN1blyJGvmdx+g4bv9GoFYq5iiOHRiZ8="
+  },
+  "optimized-routines": {
+    "type": "github",
+    "owner": "ARM-software",
+    "repo": "optimized-routines",
+    "rev": "2ee4b0d45680a9880412c1d186224b08652c35f6",
+    "narHash": "sha256-dFyfPjz4UMHEzX/tqnQokTaExZLBZaOJaBfXaXm7Scg=",
+    "lastModified": 1793213247
+  },
+  "rpmalloc": {
+    "type": "github",
+    "owner": "mjansson",
+    "repo": "rpmalloc",
+    "rev": "b8455bb84368ea58cc163c62e12b8fa8c4112e8b",
+    "narHash": "sha256-s/a/qfJbOMHn4JxK9uQR9v2Ww2dLBPVz1+YANmj+zFM=",
+    "lastModified": 1792417941
   }
 }

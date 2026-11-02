@@ -284,6 +284,7 @@
   mkWrappedFirefox = firefox:
     wrapFirefox firefox {
       inherit extraPrefs extraPolicies;
+      cfg = {speechSynthesisSupport = false;};
     };
 in {
   firefox-musl = mkWrappedFirefox pkgs.firefox-unwrapped;

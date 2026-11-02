@@ -25,9 +25,6 @@
 #   unpack          fixed-only tarball or file
 [inputs]
 
-[inputs.nixpkgs]
-url = "github:NixOS/nixpkgs/nixos-unstable"
-
 [inputs.finix]
 url = "github:finix-community/finix/main"
 
@@ -37,10 +34,14 @@ url = "github:dmkhitaryan/finix/coreutils-in-bashrc"
 [inputs.finix-community]
 url = "github:finix-community/community-modules"
 
-[inputs.nh]
-url = "github:nix-community/nh"
-follows = { nixpkgs = "nixpkgs" }
-
-[inputs.nixpkgs-zst]
+[inputs.nixpkgs]
 url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst"
+type = "fetch"
+
+[inputs.optimized-routines]
+url = "github:ARM-software/optimized-routines"
+type = "fetch"
+
+[inputs.rpmalloc]
+url = "github:mjansson/rpmalloc"
 type = "fetch"
