@@ -1,0 +1,80 @@
+--- a/include/libdpe/libdpe.h
++++ b/include/libdpe/libdpe.h
+@@ -66,7 +66,7 @@
+ extern Pe *pe_clone(Pe *pe, Pe_Cmd cmd);
+ extern Pe *pe_memory(char *image, size_t size);
+ extern int pe_end(Pe *pe);
+-extern loff_t pe_update(Pe *pe, Pe_Cmd cmd);
++extern off_t pe_update(Pe *pe, Pe_Cmd cmd);
+ extern Pe_Kind pe_kind(Pe *Pe) __attribute__ ((__pure__));
+ extern Pe_Scn *pe_nextscn(Pe *pe, Pe_Scn *scn);
+ extern Pe_Scn *pe_getscn(Pe *pe, size_t idx);
+--- a/libdpe/common.h
++++ b/libdpe/common.h
+@@ -11,6 +11,15 @@
+
+ #include <stdlib.h>
+ #include <sys/mman.h>
++/* taken from glibc unistd.h and fixes musl */
++#ifndef TEMP_FAILURE_RETRY
++#define TEMP_FAILURE_RETRY(expression) \
++  (__extension__                                                              \
++    ({ long int __result;                                                     \
++       do __result = (long int) (expression);                                 \
++       while (__result == -1L && errno == EINTR);                             \
++       __result; }))
++#endif
+
+ #define pwrite_retry(fd, buf,  len, off) \
+ 	TEMP_FAILURE_RETRY (pwrite (fd, buf, len, off))
+--- a/libdpe/pe_update.c
++++ b/libdpe/pe_update.c
+@@ -61,7 +61,7 @@
+ 	return size;
+ }
+
+-loff_t
++off_t
+ pe_update(Pe *pe, Pe_Cmd cmd)
+ {
+ 	if (cmd != PE_C_NULL && cmd != PE_C_WRITE && cmd != PE_C_WRITE_MMAP) {
+--- a/src/cms_common.h
++++ b/src/cms_common.h
+@@ -29,7 +29,7 @@
+ #include "password.h"
+
+ #define save_port_err() \
+-	for (error_t saved_errno_0_ = 0, saved_errno_1_ = PORT_GetError(); saved_errno_0_ < 1; saved_errno_0_++, PORT_SetError(saved_errno_1_))
++	for (int saved_errno_0_ = 0, saved_errno_1_ = PORT_GetError(); saved_errno_0_ < 1; saved_errno_0_++, PORT_SetError(saved_errno_1_))
+
+ #define for_each_cert(cl, node) \
+ 	for (CERTCertListNode *node = CERT_LIST_HEAD(cl); !CERT_LIST_END(node, cl); node = CERT_LIST_NEXT(node))
+--- a/src/daemon.c
++++ b/src/daemon.c
+@@ -965,7 +965,7 @@
+
+ 			struct sockaddr_un remote;
+ 			socklen_t len = sizeof(remote);
+-			pollfds[nsockets-1].fd = accept(pollfds[0].fd, &remote,
++			pollfds[nsockets-1].fd = accept(pollfds[0].fd, (struct sockaddr *)&remote,
+ 							&len);
+ 			pollfds[nsockets-1].events = POLLIN|POLLPRI|POLLHUP;
+ 			pollfds[nsockets-1].revents = pollfds[0].revents;
+@@ -1043,7 +1043,7 @@
+ 		.sun_path = SOCKPATH,
+ 	};
+
+-	int rc = bind(sd, &addr_un, sizeof(addr_un));
++	int rc = bind(sd, (struct sockaddr *)&addr_un, sizeof(addr_un));
+ 	if (rc < 0) {
+ 		ctx->backup_cms->log(ctx->backup_cms, ctx->priority|LOG_ERR,
+ 			"unable to bind to \"%s\": %m",
+@@ -1099,7 +1099,7 @@
+
+ 		struct sockaddr_un remote;
+ 		socklen_t size = sizeof(remote);
+-		rc = getpeername(sd, &remote, &size);
++		rc = getpeername(sd, (struct sockaddr *)&remote, &size);
+ 		if (rc < 0) {
+ 			close(sd);
+ 			return;
