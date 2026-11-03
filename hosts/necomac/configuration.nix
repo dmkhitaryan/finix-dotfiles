@@ -253,6 +253,12 @@
   });
 
   oo7-server-fix = pkgs.oo7-server.overrideAttrs (old: {
+    postPatch = ''
+      		substituteInPlace src/capability.rs \
+      		  --replace-fail 'MlockAllFlags::CURRENT | MlockAllFlags::FUTURE' \
+      		  				 'MlockAllFlags::CURRENT | MlockAllFlags::FUTURE | MlockAllFlags::ONFAULT'
+    '';
+
     postInstall =
       (old.postInstall or "")
       + ''
@@ -449,9 +455,9 @@ in {
         "nix-command"
         "flakes"
       ];
-      max-jobs = 2;
-      cores = 4;
-      log-lines = 75;
+      max-jobs = "auto";
+      cores = 0;
+      log-lines = 50;
       max-silent-time = 3600;
       nix-path = "";
       trusted-users = [
